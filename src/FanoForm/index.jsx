@@ -29,7 +29,12 @@ FanoForm.config = (options) => {
  * @param {*} json JSON配置
  */
 FanoForm.fromJson = (json) => {
-  return props => <DynamicForm {...props} config={json} />
+  return (
+    props => {
+      combineFieldExpand(json.fields, props.fieldExpand)
+      return <DynamicForm {...props} config={json} />
+    }
+  )
 }
 
 /**
@@ -38,10 +43,16 @@ FanoForm.fromJson = (json) => {
  */
 FanoForm.fromUrl = (url) => {
   if (!_.isString(url)) {
-    throw new Error(`Invalid url: ${url}`)
+    throw new Error(`Invalid 'url': ${url}`)
   }
   get(url)
-    .then(json => FanoForm.fromJson(json))
+    .then(json => {
+      if (_.isPlainObject(json) && Array.isArray(json.list)) {
+        FanoForm.fromJson(json.list)
+      } else {
+        throw new Error(`Invalid 'url' format`)
+      }
+    })
     .catch(e => { throw e })
 }
 
@@ -53,10 +64,16 @@ FanoForm.fromMeta = (code) => {
   if (!_.isString(code)) {
     throw new Error(`Invalid code: ${code}`)
   } else if (!_.isString(FanoForm.c.metaUrl)) {
-    throw new Error(`Invalid metaUrl`)
+    throw new Error(`Invalid 'metaUrl' format`)
   }
   get(`${FanoForm.c.metaUrl}?${qs.stringify({ code })}`)
-    .then(json => FanoForm.fromJson(json))
+    .then(json => {
+      if (_.isPlainObject(json) && Array.isArray(json.list)) {
+        FanoForm.fromJson(json.list)
+      } else {
+        throw new Error(`Invalid 'metaUrl' format`)
+      }
+    })
     .catch(e => { throw e })
 }
 
@@ -67,6 +84,22 @@ FanoForm.fromMeta = (code) => {
  */
 FanoForm.injectType = (code, fn) => {
 
+}
+
+/**
+ * 合并扩展属性到标准属性中
+ */
+function combineFieldExpand (config, fieldExpand) {
+  if (!_.isPlainObject(fieldExpand)) {
+    return
+  }
+  for (const field of config.fields) {
+    const expand = fieldExpand[field.name]
+    if (_.isPlainObject(expand)) {
+      console.log(expand)
+      Object.assign(field, expand)
+    }
+  }
 }
 
 export default FanoForm
