@@ -6,9 +6,11 @@
   "scripts": {
     "clean": "rimraf lib",
     "build": "babel src --out-dir lib --source-maps --extensions .es6,.es,.jsx,.js --copy-files",
+    "watch": "babel src --watch --out-dir lib --source-maps --extensions .es6,.es,.jsx,.js --copy-files",
     "lint": "standard --verbose",
     "fix": "standard --fix",
     "precommit": "npm run lint",
+    "pub": "BABEL_ENV=production npm run build",
     "prepublish": "npm run clean && npm run build"
   },
   "repository": {
@@ -33,10 +35,12 @@
   },
   "devDependencies": {
     "babel-cli": "^6.26.0",
+    "babel-core": "^6.26.3",
     "babel-plugin-import": "^1.8.0",
     "babel-plugin-transform-es2015-modules-umd": "^6.24.1",
     "babel-plugin-transform-runtime": "^6.23.0",
     "babel-preset-env": "^1.7.0",
+    "babel-preset-minify": "^0.4.3",
     "babel-preset-react": "^6.24.1",
     "husky": "^0.14.3",
     "rimraf": "^2.6.2",
@@ -50,7 +54,23 @@
     "plugins": [
       "transform-runtime",
       "transform-es2015-modules-umd",
-      ["import", { "libraryName": "antd", "libraryDirectory": "es", "style": true }]
-    ]
+      [
+        "import",
+        {
+          "libraryName": "antd",
+          "libraryDirectory": "es",
+          "style": true
+        }
+      ]
+    ],
+    "env": {
+      "production": {
+        "presets": [
+          "minify",
+          "env",
+          "react"
+        ]
+      }
+    }
   }
 }

@@ -55,15 +55,15 @@ class DynamicForm extends React.Component {
     }
     switch (maxCol) {
       case 4:
-        return { xs: 24, sm: 12, md: 8, lg: 8, xl: 6 }
+        return { xs: 24, sm: 12, md: 12, lg: 8, xl: 6 }
       case 3:
-        return { xs: 24, sm: 12, md: 8 }
+        return { xs: 24, sm: 12, md: 12, lg: 8 }
       case 2:
         return { xs: 24, sm: 12 }
       case 1:
         return { xs: 24 }
       default:
-        return { xs: 24, sm: 12, md: 8, lg: 8, xl: 6 }
+        return { xs: 24, sm: 12, md: 12, lg: 8, xl: 6 }
     }
   }
 
@@ -124,19 +124,33 @@ class DynamicForm extends React.Component {
       }
       this.addRequiredRule(itemOptions.rules, field.props.required)
       const errorProps = _.pick(fieldsError[field.name], ['requiredMark', 'validateStatus', 'hasFeedback', 'help'])
-      const label = [<span key={'label'}>{field.label}</span>]
-      if (!field.props.required && (field.props.requiredMark === true || errorProps.requiredMark === true)) {
-        label.unshift(<span key={'requiredMark'} className={styles.requiredMark}>*</span>)
+
+      const formItemLabelText = <span key={'label'} className={`${styles.formItemLabelText} fano-form-item-label-text`}>{field.label}</span>
+      const formItemColon = (mark = ':') => <span key={'colon'} className={`${styles.formItemColon} fano-form-item-colon`}>{mark}</span>
+      const formItemRequiredMark = <span key={'requiredMark'} className={`${styles.requiredMark} fano-form-item-required-mark`}>*</span>
+
+      const labelContainer = [formItemLabelText]
+      if (field.props.required || (field.props.requiredMark === true || errorProps.requiredMark === true)) {
+        labelContainer.unshift(formItemRequiredMark)
+      }
+      if (_.isEmpty(field.props.colon) || field.props.colon === true) {
+        labelContainer.push(formItemColon())
+      } else {
+        labelContainer.push(formItemColon(null))
       }
       cols.push(
         <Col key={i} {...colProps}>
           <FormItem
-            label={label}
+            className={`${styles.formItem} fano-form-item`}
+            label={<span className={`${styles.formItemLabel} fano-form-item-label`}>{labelContainer}</span>}
+            colon={false}
             {...errorProps}
           >
-            {getFieldDecorator(field.name, itemOptions)(
-              this.getFieldControl(field)
-            )}
+            <div className={`${styles.formItemCtrl} fano-form-item`}>
+              {getFieldDecorator(field.name, itemOptions)(
+                this.getFieldControl(field)
+              )}
+            </div>
           </FormItem>
         </Col>
       )

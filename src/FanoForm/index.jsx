@@ -8,7 +8,6 @@ import DynamicForm from './DynamicForm'
  * 表单组件
  */
 class FanoForm {
-
 }
 
 FanoForm.c = {}
@@ -30,7 +29,7 @@ FanoForm.config = (options) => {
  * @param {*} json JSON配置
  */
 FanoForm.fromJson = (json) => {
-  return <DynamicForm config={json} />
+  return props => <DynamicForm {...props} config={json} />
 }
 
 /**
