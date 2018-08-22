@@ -80,7 +80,7 @@ FanoForm.fromJson = (json) => {
       render () {
         return (
           <DynamicForm {...this.props}
-            types={FanoForm.c.types}
+            c={FanoForm.c}
             config={json}
             wrappedComponentRef={this.wrappedComponentRef}
           />

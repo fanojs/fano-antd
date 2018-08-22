@@ -5,6 +5,58 @@ import _ from 'lodash'
 const TOKEN_KEY = 'token'
 
 /**
+ * 底层请求封装
+ * @param url
+ * @param body
+ * @param [opts]
+ * @return {Promise}
+ */
+async function request (url, opts) {
+  // 配置加工
+  opts = _.merge({
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+      'token': window.localStorage.getItem(TOKEN_KEY)
+    },
+    cache: 'no-cache',
+    credentials: 'include'
+  }, opts)
+  const onError = _.result(opts, 'onError', null)
+  delete opts.onError
+
+  // 定义异常处理器
+  const errorHandler = async (errmsg) => {
+    if (onError !== null) {
+      if (_.isFunction(onError)) {
+        onError(errmsg)
+      }
+    } else {
+      errmsg = errmsg || 'Network error'
+      message.error(errmsg)
+    }
+  }
+
+  // 执行请求
+  const res = await fetch(url, opts)
+  let data = null
+  if (res.status >= 200 && res.status < 300) {
+    const json = await res.json()
+    if (json.errcode || json.errmsg) {
+      if (json.errstack) {
+        console.error(json.errstack)
+      }
+      await errorHandler(json.errmsg)
+    } else {
+      data = _.result(json, 'data', json)
+    }
+  } else {
+    await errorHandler()
+  }
+  return data
+}
+
+/**
  * 常规GET请求
  * @param url
  * @param [opts]
@@ -56,54 +108,4 @@ export function del (url, body, opts) {
   }, opts))
 }
 
-/**
- * 底层请求封装
- * @param url
- * @param body
- * @param [opts]
- * @return {Promise}
- */
-export default async function request (url, opts) {
-  // 配置加工
-  opts = _.merge({
-    method: 'GET',
-    headers: {
-      'Content-Type': 'application/json',
-      'token': window.localStorage.getItem(TOKEN_KEY)
-    },
-    cache: 'no-cache',
-    credentials: 'include'
-  }, opts)
-  const onError = _.result(opts, 'onError', null)
-  delete opts.onError
-
-  // 定义异常处理器
-  const errorHandler = async (errmsg) => {
-    if (onError !== null) {
-      if (_.isFunction(onError)) {
-        onError(errmsg)
-      }
-    } else {
-      errmsg = errmsg || 'Network error'
-      message.error(errmsg)
-    }
-  }
-
-  // 执行请求
-  const res = await fetch(url, opts)
-  let data = null
-  if (res.status >= 200 && res.status < 300) {
-    const json = await res.json()
-    if (json.errcode || json.errmsg) {
-      if (json.errstack) {
-        console.error(json.errstack)
-      }
-      await errorHandler(json.errmsg)
-    } else {
-      data = _.result(json, 'data', json)
-    }
-  } else {
-    await errorHandler()
-  }
-  return data
-}
+export default request

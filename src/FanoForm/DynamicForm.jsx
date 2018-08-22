@@ -13,6 +13,7 @@ class DynamicForm extends React.Component {
     }
     this.handleSubmit = this.handleSubmit.bind(this)
   }
+
   getRequiredRule (required) {
     const rule = { required: true }
     if (_.isString(required)) {
@@ -26,9 +27,9 @@ class DynamicForm extends React.Component {
   }
 
   getFieldControl (field) {
-    const FanoFormType = this.props.types[field.type]
+    const FanoFormType = this.props.c.types[field.type]
     if (FanoFormType) {
-      return <FanoFormType field={field} />
+      return <FanoFormType field={field} c={this.props.c} />
     }
     throw new Error(`Invalid type: "${field.name} => ${field.type}"`)
   }
