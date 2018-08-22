@@ -29,7 +29,7 @@ class DynamicForm extends React.Component {
   getFieldControl (field) {
     const FanoFormType = this.props.c.types[field.type]
     if (FanoFormType) {
-      return <FanoFormType field={field} c={this.props.c} />
+      return <FanoFormType injectProps={{ field, c: this.props.c, getFieldsValue: this.getFieldsValue }} />
     }
     throw new Error(`Invalid type: "${field.name} => ${field.type}"`)
   }

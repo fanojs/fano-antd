@@ -11,7 +11,7 @@ const RadioGroup = Radio.Group
 export default class FanoFormRadio extends React.Component {
   constructor (props) {
     super(props)
-    const { url, dict, options = [], showButtonStyle = false } = _.get(props, 'field.props', {})
+    const { url, dict, options = [], showButtonStyle = false } = _.get(props, 'injectProps.field.props', {})
     this.state = {
       url,
       dict,
@@ -21,14 +21,15 @@ export default class FanoFormRadio extends React.Component {
   }
 
   componentDidMount () {
+    const { dictUrl } = this.props.injectProps
     if (_.isEmpty(this.state.options)) {
       if (!_.isEmpty(this.state.url)) {
         this.fetchOptions(this.state.url)
       } else if (!_.isEmpty(this.state.dict)) {
-        if (_.isEmpty(this.props.c.dictUrl)) {
+        if (_.isEmpty(dictUrl)) {
           throw new Error(`Invalid 'dictUrl'`)
         }
-        this.fetchOptions(`${this.props.c.dictUrl}?${qs.stringify({
+        this.fetchOptions(`${dictUrl}?${qs.stringify({
           cond: JSON.stringify({ code: this.state.dict }, null, 0)
         })}`)
       }
