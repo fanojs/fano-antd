@@ -10,11 +10,7 @@ import number from './types/number'
 import radio from './types/radio'
 import password from './types/password'
 
-/**
- * 表单组件
- */
-class FanoForm {
-}
+class FanoForm { }
 
 FanoForm.c = {
   types: {
@@ -45,9 +41,51 @@ FanoForm.config = (options) => {
  */
 FanoForm.fromJson = (json) => {
   return (
-    props => {
-      combineFieldExpand(json.fields, props.fieldExpand)
-      return <DynamicForm {...props} types={FanoForm.c.types} config={json} />
+    class FanoComponent extends React.Component {
+      constructor (props) {
+        super(props)
+        this.combineFieldExpand()
+        this.wrappedComponentRef = this.wrappedComponentRef.bind(this)
+      }
+
+      getFieldsValue () {
+        return this.formRef.getFieldsValue()
+      }
+
+      setFieldsValue (values) {
+        return this.formRef.setFieldsValue(values)
+      }
+
+      setFieldsError (errors) {
+        return this.formRef.setFieldsError(errors)
+      }
+
+      combineFieldExpand () {
+        const { fieldExpand } = this.props
+        if (!_.isPlainObject(fieldExpand)) {
+          return
+        }
+        for (const field of json.fields) {
+          const expand = fieldExpand[field.name]
+          if (_.isPlainObject(expand)) {
+            Object.assign(field, expand)
+          }
+        }
+      }
+
+      wrappedComponentRef (inst) {
+        this.formRef = inst
+      }
+
+      render () {
+        return (
+          <DynamicForm {...this.props}
+            types={FanoForm.c.types}
+            config={json}
+            wrappedComponentRef={this.wrappedComponentRef}
+          />
+        )
+      }
     }
   )
 }
@@ -103,22 +141,6 @@ FanoForm.injectType = (code, fn) => {
     return true
   }
   return false
-}
-
-/**
- * 合并扩展属性到标准属性中
- */
-function combineFieldExpand (config, fieldExpand) {
-  if (!_.isPlainObject(fieldExpand)) {
-    return
-  }
-  for (const field of config.fields) {
-    const expand = fieldExpand[field.name]
-    if (_.isPlainObject(expand)) {
-      console.log(expand)
-      Object.assign(field, expand)
-    }
-  }
 }
 
 export default FanoForm

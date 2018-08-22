@@ -13,15 +13,12 @@ class DynamicForm extends React.Component {
     }
     this.handleSubmit = this.handleSubmit.bind(this)
   }
-  // 添加必填校验
-  addRequiredRule (rules, required) {
-    if (required) {
-      const rule = { required: true }
-      if (_.isString(required)) {
-        rule.message = required
-      }
-      rules.push(rule)
+  getRequiredRule (required) {
+    const rule = { required: true }
+    if (_.isString(required)) {
+      rule.message = required
     }
+    return rule
   }
 
   componentDidMount () {
@@ -31,9 +28,27 @@ class DynamicForm extends React.Component {
   getFieldControl (field) {
     const FanoFormType = this.props.types[field.type]
     if (FanoFormType) {
-      return <FanoFormType {...field} />
+      return <FanoFormType field={field} />
     }
     throw new Error(`Invalid type: "${field.name} => ${field.type}"`)
+  }
+
+  getFieldLabel (field, needMark) {
+    const text = <span key={'label'} className={`${styles.formItemText} fano-form-item-label-text`}>{field.label}</span>
+    const mark = <span key={'requiredMark'} className={`${styles.requiredMark} fano-form-item-required-mark`}>*</span>
+    const colonGetter = (mark = ':') => <span key={'colon'} className={`${styles.formItemColon} fano-form-item-colon`}>{mark}</span>
+
+    const label = [text]
+    if (field.props.required ||
+      (field.props.requiredMark === true || needMark === true)) {
+      label.unshift(mark)
+    }
+    if (_.isEmpty(field.props.colon) || field.props.colon === true) {
+      label.push(colonGetter())
+    } else {
+      label.push(colonGetter(null))
+    }
+    return label
   }
 
   getColProps (colCount) {
@@ -79,14 +94,17 @@ class DynamicForm extends React.Component {
     return fields
   }
 
-  setFieldsError (data) {
-    // requiredMark:boolean - 是否显示必填
-    // validateStatus:string - 校验状态，可选 'success', 'warning', 'error', 'validating'
-    // hasFeedback:boolean - 用于给输入框添加反馈图标
-    // help:string - 设置校验文案
-    if (_.isPlainObject(data)) {
+  /**
+   * 设置字段错误信息
+   * requiredMark:boolean - 是否显示必填
+   * validateStatus:string - 校验状态，可选 'success', 'warning', 'error', 'validating'
+   * hasFeedback:boolean - 用于给输入框添加反馈图标
+   * help:string - 设置校验文案
+   */
+  setFieldsError (errors) {
+    if (_.isPlainObject(errors)) {
       const { fieldsError } = this.state
-      Object.assign(fieldsError, data)
+      Object.assign(fieldsError, errors)
       this.setState({ fieldsError })
       return true
     }
@@ -104,38 +122,28 @@ class DynamicForm extends React.Component {
       const field = fields[i]
       field.props = _.isPlainObject(field.props) ? field.props : {}
       field.props.placeholder = field.props.placeholder || field.label
-      const fieldOptions = {
+
+      const fieldError = _.pick(fieldsError[field.name], ['requiredMark', 'validateStatus', 'hasFeedback', 'help'])
+      const fieldLabel = this.getFieldLabel(field, fieldError.requiredMark)
+      const fieldControl = this.getFieldControl(field)
+      const formItemProps = {
+        className: `${styles.formItem} fano-form-item`,
+        label: <span className={`${styles.formItemLabel} fano-form-item-label`}>{fieldLabel}</span>,
+        colon: false
+      }
+      const formItemOptions = {
         rules: [],
         initialValue: field.props.defaultValue
       }
-      this.addRequiredRule(fieldOptions.rules, field.props.required)
-      const errorProps = _.pick(fieldsError[field.name], ['requiredMark', 'validateStatus', 'hasFeedback', 'help'])
-
-      const formItemLabelText = <span key={'label'} className={`${styles.formItemLabelText} fano-form-item-label-text`}>{field.label}</span>
-      const formItemRequiredMark = <span key={'requiredMark'} className={`${styles.requiredMark} fano-form-item-required-mark`}>*</span>
-      const formItemColon = (mark = ':') => <span key={'colon'} className={`${styles.formItemColon} fano-form-item-colon`}>{mark}</span>
-
-      const labelContainer = [formItemLabelText]
-      if (field.props.required || (field.props.requiredMark === true || errorProps.requiredMark === true)) {
-        labelContainer.unshift(formItemRequiredMark)
+      if (field.props.required) {
+        formItemOptions.rules.push(this.getRequiredRule(field.props.required))
       }
-      if (_.isEmpty(field.props.colon) || field.props.colon === true) {
-        labelContainer.push(formItemColon())
-      } else {
-        labelContainer.push(formItemColon(null))
-      }
+      Object.assign(formItemProps, fieldError)
       cols.push(
         <Col key={i} {...colProps}>
-          <FormItem
-            className={`${styles.formItem} fano-form-item`}
-            label={<span className={`${styles.formItemLabel} fano-form-item-label`}>{labelContainer}</span>}
-            colon={false}
-            {...errorProps}
-          >
+          <FormItem {...formItemProps}>
             <div className={`${styles.formItemCtrl} fano-form-item`}>
-              {getFieldDecorator(field.name, fieldOptions)(
-                this.getFieldControl(field)
-              )}
+              {getFieldDecorator(field.name, formItemOptions)(fieldControl)}
             </div>
           </FormItem>
         </Col>
@@ -152,17 +160,22 @@ class DynamicForm extends React.Component {
     })
   }
 
+  getDefaultFooter () {
+    return (
+      <div className={styles.footer}>
+        <Button>取消</Button>
+        <Button type={'primary'} onClick={this.handleSubmit}>确定</Button>
+      </div>
+    )
+  }
+
   render () {
-    console.log(this.refs)
     return (
       <Form layout={'inline'}>
         <Row>{this.renderFields()}</Row>
         <Row>
           <Col>
-            <div className={styles.footer}>
-              <Button>取消</Button>
-              <Button type={'primary'} onClick={this.handleSubmit}>确定</Button>
-            </div>
+            {this.props.footer === undefined ? this.getDefaultFooter() : this.props.footer}
           </Col>
         </Row>
       </Form>

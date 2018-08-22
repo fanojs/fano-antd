@@ -1,14 +1,13 @@
 import React from 'react'
 import { Input } from 'antd'
-import _ from 'lodash'
+import { getProps } from '../../utils/form'
 
 export default class FanoFormText extends React.Component {
   render () {
-    const f = this.props
-    const props = Object.assign(_.pick(f.props, [
+    const props = getProps(this.props, [
       'placeholder',
       'disabled'
-    ]), _.get(f, 'componentProps', {}))
+    ])
     return (
       <Input {...props} />
     )

@@ -1,30 +1,24 @@
 import React from 'react'
 import { Radio } from 'antd'
 import _ from 'lodash'
+import { getProps } from '../../utils/form'
 
 const RadioButton = Radio.Button
 const RadioGroup = Radio.Group
 
 export default class FanoFormRadio extends React.Component {
-  constructor (props) {
-    super(props)
-    this.state = {
-      options: _.get(props, 'options', [])
-    }
-  }
   render () {
-    const f = this.props
-    const props = Object.assign(_.get(f, 'componentProps', {}), {
-      name: f.name
-    })
+    const { options = [], showButtonStyle = false } = _.get(this, 'props.field.props', {})
+    const props = getProps(this.props, [
+      'placeholder',
+      'disabled'
+    ])
     const children = []
-    if (_.isArray(f.props.options)) {
-      for (const option of f.props.options) {
-        if (f.props.showButtonStyle) {
-          children.push(<RadioButton key={option.value} value={option.value}>{option.label}</RadioButton>)
-        } else {
-          children.push(<Radio key={option.value} value={option.value}>{option.label}</Radio>)
-        }
+    for (const o of options) {
+      if (showButtonStyle) {
+        children.push(<RadioButton key={o.value} value={o.value}>{o.label}</RadioButton>)
+      } else {
+        children.push(<Radio key={o.value} value={o.value}>{o.label}</Radio>)
       }
     }
     return (
