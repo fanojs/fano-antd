@@ -1,14 +1,20 @@
 import React from 'react'
-import { Input } from 'antd'
+import { InputNumber } from 'antd'
+import _ from 'lodash'
 
-export default field => {
-  const { props } = field
-  const itemProps = {
-    type: 'number',
-    autoComplete: field.name
+export default class FanoFormDigit extends React.Component {
+  render () {
+    const f = this.props
+    const props = Object.assign(_.pick(f.props, [
+      'placeholder',
+      'max',
+      'min',
+      'step',
+      'precision',
+      'disabled'
+    ]), _.get(f, 'componentProps', {}))
+    return (
+      <InputNumber {...props} />
+    )
   }
-  if (props.placeholder) {
-    itemProps.placeholder = props.placeholder
-  }
-  return <Input {...itemProps} />
 }

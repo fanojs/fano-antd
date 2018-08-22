@@ -3,6 +3,12 @@ import qs from 'qs'
 import _ from 'lodash'
 import { get } from '../utils/request'
 import DynamicForm from './DynamicForm'
+import text from './types/text'
+import hidden from './types/hidden'
+import digit from './types/digit'
+import number from './types/number'
+import radio from './types/radio'
+import password from './types/password'
 
 /**
  * 表单组件
@@ -10,14 +16,23 @@ import DynamicForm from './DynamicForm'
 class FanoForm {
 }
 
-FanoForm.c = {}
+FanoForm.c = {
+  types: {
+    text,
+    password,
+    hidden,
+    number,
+    digit,
+    radio
+  }
+}
 
 /**
  * 全局配置
  * @param {*} options 配置项
  */
 FanoForm.config = (options) => {
-  if (!_.isEmpty(options) && _.isObject(options) && !Array.isArray(options)) {
+  if (_.isPlainObject(options)) {
     _.merge(FanoForm.c, options)
   } else {
     throw new Error(`Invalid options`)
@@ -32,7 +47,7 @@ FanoForm.fromJson = (json) => {
   return (
     props => {
       combineFieldExpand(json.fields, props.fieldExpand)
-      return <DynamicForm {...props} config={json} />
+      return <DynamicForm {...props} types={FanoForm.c.types} config={json} />
     }
   )
 }
@@ -47,7 +62,7 @@ FanoForm.fromUrl = (url) => {
   }
   get(url)
     .then(json => {
-      if (_.isPlainObject(json) && Array.isArray(json.list)) {
+      if (Array.isArray(_.get(json, 'list'))) {
         FanoForm.fromJson(json.list)
       } else {
         throw new Error(`Invalid 'url' format`)
@@ -68,7 +83,7 @@ FanoForm.fromMeta = (code) => {
   }
   get(`${FanoForm.c.metaUrl}?${qs.stringify({ code })}`)
     .then(json => {
-      if (_.isPlainObject(json) && Array.isArray(json.list)) {
+      if (Array.isArray(_.get(json, 'list'))) {
         FanoForm.fromJson(json.list)
       } else {
         throw new Error(`Invalid 'metaUrl' format`)
@@ -83,7 +98,11 @@ FanoForm.fromMeta = (code) => {
  * @param {*} fn 类型函数
  */
 FanoForm.injectType = (code, fn) => {
-
+  if (_.isString(code) && _.isFunction(fn)) {
+    FanoForm.c.types.code = fn
+    return true
+  }
+  return false
 }
 
 /**

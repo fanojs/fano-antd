@@ -2,19 +2,6 @@ import React from 'react'
 import _ from 'lodash'
 import { Form, Row, Col, Button } from 'antd'
 import styles from './DynamicForm.less'
-import text from './types/text'
-import hidden from './types/hidden'
-import digit from './types/digit'
-import number from './types/number'
-import radio from './types/radio'
-
-const types = {
-  text,
-  hidden,
-  digit,
-  number,
-  radio
-}
 
 const FormItem = Form.Item
 
@@ -42,9 +29,9 @@ class DynamicForm extends React.Component {
   }
 
   getFieldControl (field) {
-    const typeFn = types[field.type]
-    if (_.isFunction(typeFn)) {
-      return typeFn(field)
+    const FanoFormType = this.props.types[field.type]
+    if (FanoFormType) {
+      return <FanoFormType {...field} />
     }
     throw new Error(`Invalid type: "${field.name} => ${field.type}"`)
   }
@@ -68,7 +55,7 @@ class DynamicForm extends React.Component {
   }
 
   setFieldsValue (values) {
-    if (_.isObject(values)) {
+    if (_.isPlainObject(values)) {
       return !!this.props.form.setFieldsValue(values)
     }
     return false
@@ -97,7 +84,7 @@ class DynamicForm extends React.Component {
     // validateStatus:string - 校验状态，可选 'success', 'warning', 'error', 'validating'
     // hasFeedback:boolean - 用于给输入框添加反馈图标
     // help:string - 设置校验文案
-    if (_.isObject(data)) {
+    if (_.isPlainObject(data)) {
       const { fieldsError } = this.state
       Object.assign(fieldsError, data)
       this.setState({ fieldsError })
@@ -115,18 +102,18 @@ class DynamicForm extends React.Component {
     const cols = []
     for (let i = 0; i < fields.length; i++) {
       const field = fields[i]
-      field.props = _.isObject(field.props) ? field.props : {}
+      field.props = _.isPlainObject(field.props) ? field.props : {}
       field.props.placeholder = field.props.placeholder || field.label
-      const itemOptions = {
+      const fieldOptions = {
         rules: [],
         initialValue: field.props.defaultValue
       }
-      this.addRequiredRule(itemOptions.rules, field.props.required)
+      this.addRequiredRule(fieldOptions.rules, field.props.required)
       const errorProps = _.pick(fieldsError[field.name], ['requiredMark', 'validateStatus', 'hasFeedback', 'help'])
 
       const formItemLabelText = <span key={'label'} className={`${styles.formItemLabelText} fano-form-item-label-text`}>{field.label}</span>
-      const formItemColon = (mark = ':') => <span key={'colon'} className={`${styles.formItemColon} fano-form-item-colon`}>{mark}</span>
       const formItemRequiredMark = <span key={'requiredMark'} className={`${styles.requiredMark} fano-form-item-required-mark`}>*</span>
+      const formItemColon = (mark = ':') => <span key={'colon'} className={`${styles.formItemColon} fano-form-item-colon`}>{mark}</span>
 
       const labelContainer = [formItemLabelText]
       if (field.props.required || (field.props.requiredMark === true || errorProps.requiredMark === true)) {
@@ -146,7 +133,7 @@ class DynamicForm extends React.Component {
             {...errorProps}
           >
             <div className={`${styles.formItemCtrl} fano-form-item`}>
-              {getFieldDecorator(field.name, itemOptions)(
+              {getFieldDecorator(field.name, fieldOptions)(
                 this.getFieldControl(field)
               )}
             </div>
@@ -166,6 +153,7 @@ class DynamicForm extends React.Component {
   }
 
   render () {
+    console.log(this.refs)
     return (
       <Form layout={'inline'}>
         <Row>{this.renderFields()}</Row>
