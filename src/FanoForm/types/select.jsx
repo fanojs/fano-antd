@@ -12,18 +12,20 @@ const OptGroup = Select.OptGroup
 export default class FanoFormSelect extends React.Component {
   constructor (props) {
     super(props)
-    const { url, dict, options = [], max } = props.injectProps.field.props
+    const { url, dict, options = [], max, remoteSearch } = props.injectProps.field.props
     this.state = {
       url,
       dict,
       options,
       max,
+      remoteSearch,
       disabledOptions: [],
       plainValues: options.map(o => o.value),
       transformed: this.transformProps()
     }
     this.state.multi = !!this.state.transformed.multi
     this.onChange = this.onChange.bind(this)
+    this.onSearch = this.onSearch.bind(this)
   }
 
   transformProps () {
@@ -99,8 +101,14 @@ export default class FanoFormSelect extends React.Component {
     return this.props.onChange(value, option)
   }
 
+  onSearch (value) {
+    this.fetchOptions(`${this.state.url}?${qs.stringify({
+      cond: JSON.stringify({ value }, null, 0)
+    })}`)
+  }
+
   render () {
-    const { options, disabledOptions, transformed, multi } = this.state
+    const { options, disabledOptions, transformed, remoteSearch, multi } = this.state
     const props = getProps(this.props, [
       'placeholder',
       'allowClear',
@@ -119,7 +127,7 @@ export default class FanoFormSelect extends React.Component {
           )
         }
         children.push(
-          <OptGroup key={value} label={label}>{groupItems}</OptGroup>
+          <OptGroup key={label} label={label}>{groupItems}</OptGroup>
         )
       } else {
         children.push(
@@ -129,6 +137,9 @@ export default class FanoFormSelect extends React.Component {
     }
     if (multi === true) {
       props.onChange = this.onChange
+    }
+    if (remoteSearch === true) {
+      props.onSearch = this.onSearch
     }
     return (
       <Select {...props}>{children}</Select>
