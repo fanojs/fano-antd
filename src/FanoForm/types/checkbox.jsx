@@ -11,14 +11,12 @@ const CheckboxGroup = Checkbox.Group
 export default class FanoFormCheckbox extends React.Component {
   constructor (props) {
     super(props)
-    const { url, dict, options = [], showButtonStyle = false, max, min } = props.injectProps.field.props
+    const { url, dict, options = [], max } = props.injectProps.field.props
     this.state = {
       url,
       dict,
       options,
-      showButtonStyle,
       max,
-      min,
       disabledOptions: [],
       plainValues: options.map(o => o.value)
     }
