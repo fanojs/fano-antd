@@ -12,6 +12,9 @@ import checkbox from './types/checkbox'
 import password from './types/password'
 import select from './types/select'
 import datepicker from './types/datepicker'
+import monthpicker from './types/monthpicker'
+import weekpicker from './types/weekpicker'
+import timepicker from './types/timepicker'
 
 class FanoForm { }
 
@@ -25,7 +28,10 @@ FanoForm.c = {
     radio,
     checkbox,
     select,
-    datepicker
+    datepicker,
+    monthpicker,
+    weekpicker,
+    timepicker
   }
 }
 
