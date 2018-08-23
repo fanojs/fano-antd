@@ -121,7 +121,6 @@ class DynamicForm extends React.Component {
     const cols = []
     for (let i = 0; i < fields.length; i++) {
       const field = fields[i]
-      field.props = _.isPlainObject(field.props) ? field.props : {}
       field.props.placeholder = field.props.placeholder || field.label
 
       const fieldError = _.pick(fieldsError[field.name], ['requiredMark', 'validateStatus', 'hasFeedback', 'help'])

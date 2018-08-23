@@ -8,6 +8,7 @@ import hidden from './types/hidden'
 import digit from './types/digit'
 import number from './types/number'
 import radio from './types/radio'
+import checkbox from './types/checkbox'
 import password from './types/password'
 
 class FanoForm { }
@@ -19,7 +20,8 @@ FanoForm.c = {
     hidden,
     number,
     digit,
-    radio
+    radio,
+    checkbox
   }
 }
 
@@ -44,8 +46,15 @@ FanoForm.fromJson = (json) => {
     class FanoComponent extends React.Component {
       constructor (props) {
         super(props)
-        this.combineFieldExpand()
+        this.setDefaultValue(json)
+        this.combineExpandProps(json)
         this.wrappedComponentRef = this.wrappedComponentRef.bind(this)
+      }
+
+      setDefaultValue (json) {
+        for (const field of json.fields) {
+          field.props = field.props || {}
+        }
       }
 
       getFieldsValue () {
@@ -60,15 +69,15 @@ FanoForm.fromJson = (json) => {
         return this.formRef.setFieldsError(errors)
       }
 
-      combineFieldExpand () {
-        const { fieldExpand } = this.props
-        if (!_.isPlainObject(fieldExpand)) {
+      combineExpandProps (json) {
+        const { expandProps } = this.props
+        if (!_.isPlainObject(expandProps)) {
           return
         }
         for (const field of json.fields) {
-          const expand = fieldExpand[field.name]
+          const expand = expandProps[field.name]
           if (_.isPlainObject(expand)) {
-            Object.assign(field, expand)
+            Object.assign(field.props, expand)
           }
         }
       }

@@ -1,23 +1,28 @@
+
 import React from 'react'
 import qs from 'qs'
-import { Radio } from 'antd'
+import { Checkbox } from 'antd'
 import _ from 'lodash'
 import { get } from '../../utils/request'
 import { getProps } from '../../utils/form'
 
-const RadioButton = Radio.Button
-const RadioGroup = Radio.Group
+const CheckboxGroup = Checkbox.Group
 
-export default class FanoFormRadio extends React.Component {
+export default class FanoFormCheckbox extends React.Component {
   constructor (props) {
     super(props)
-    const { url, dict, options = [], showButtonStyle = false } = props.injectProps.field.props
+    const { url, dict, options = [], showButtonStyle = false, max, min } = props.injectProps.field.props
     this.state = {
       url,
       dict,
       options,
-      showButtonStyle
+      showButtonStyle,
+      max,
+      min,
+      disabledOptions: [],
+      plainValues: options.map(o => o.value)
     }
+    this.onChange = this.onChange.bind(this)
   }
 
   componentDidMount () {
@@ -45,7 +50,8 @@ export default class FanoFormRadio extends React.Component {
       .then(json => {
         if (Array.isArray(_.get(json, 'list'))) {
           this.setState({
-            options: json.list
+            options: json.list,
+            plainValues: json.list.map(o => o.value)
           })
         } else {
           throw new Error(`Invalid 'url' format`)
@@ -54,22 +60,35 @@ export default class FanoFormRadio extends React.Component {
       .catch(e => { throw e })
   }
 
+  onChange (checkedValues) {
+    const { max } = this.state
+    let disabledOptions = []
+    if (_.isNumber(max)) {
+      if (checkedValues.length === max) {
+        disabledOptions = _.difference(this.state.plainValues, checkedValues)
+      }
+      if (checkedValues.length > max) {
+        checkedValues = this.props.value
+      }
+    }
+    this.setState({ disabledOptions })
+    return this.props.onChange(checkedValues)
+  }
+
   render () {
-    const { options, showButtonStyle } = this.state
+    const { options, disabledOptions } = this.state
     const props = getProps(this.props, [
       'disabled'
     ])
     const children = []
     for (const option of options) {
       const { label, value } = option
-      if (showButtonStyle) {
-        children.push(<RadioButton key={value} value={value}>{label}</RadioButton>)
-      } else {
-        children.push(<Radio key={value} value={value}>{label}</Radio>)
-      }
+      const disabled = disabledOptions.indexOf(value) >= 0
+      children.push(<Checkbox key={value} value={value} disabled={disabled}>{label}</Checkbox>)
     }
+    props.onChange = this.onChange
     return (
-      <RadioGroup {...props}>{children}</RadioGroup>
+      <CheckboxGroup {...props}>{children}</CheckboxGroup>
     )
   }
 }
