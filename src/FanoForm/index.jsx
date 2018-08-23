@@ -15,6 +15,7 @@ import datepicker from './types/datepicker'
 import monthpicker from './types/monthpicker'
 import weekpicker from './types/weekpicker'
 import timepicker from './types/timepicker'
+import rangepicker from './types/rangepicker'
 
 class FanoForm { }
 
@@ -31,7 +32,8 @@ FanoForm.c = {
     datepicker,
     monthpicker,
     weekpicker,
-    timepicker
+    timepicker,
+    rangepicker
   }
 }
 
