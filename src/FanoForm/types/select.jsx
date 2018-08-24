@@ -19,13 +19,28 @@ export default class FanoFormSelect extends React.Component {
       options,
       max,
       remoteSearch,
-      disabledOptions: [],
       plainValues: options.map(o => o.value),
       transformed: this.transformProps()
     }
+    this.state.disabledOptions = this.getDisabledOptions(this.state.plainValues, this.props.value)
     this.state.multi = !!this.state.transformed.multi
     this.onChange = this.onChange.bind(this)
     this.onSearch = this.onSearch.bind(this)
+  }
+
+  getDisabledOptions (plainValues, value) {
+    const { max, multi } = this.state
+    if (multi === true) {
+      let disabledOptions = []
+      if (_.isNumber(max) && value.length >= max) {
+        if (value.length > max) {
+          value = this.props.value
+        }
+        disabledOptions = _.difference(plainValues, value)
+      }
+      return disabledOptions
+    }
+    return this.state.disabledOptions || []
   }
 
   transformProps () {
@@ -73,10 +88,12 @@ export default class FanoFormSelect extends React.Component {
     get(url)
       .then(json => {
         if (Array.isArray(_.get(json, 'list'))) {
-          this.setState({
+          const state = {
             options: json.list,
             plainValues: json.list.map(o => o.value)
-          })
+          }
+          state.disabledOptions = this.getDisabledOptions(state.plainValues, this.props.value)
+          this.setState(state)
         } else {
           throw new Error(`Invalid 'url' format`)
         }
@@ -85,19 +102,7 @@ export default class FanoFormSelect extends React.Component {
   }
 
   onChange (value, option) {
-    const { max, multi } = this.state
-    if (multi === true) {
-      let disabledOptions = []
-      if (_.isNumber(max)) {
-        if (value.length === max) {
-          disabledOptions = _.difference(this.state.plainValues, value)
-        }
-        if (value.length > max) {
-          value = this.props.value
-        }
-      }
-      this.setState({ disabledOptions })
-    }
+    this.setState({ disabledOptions: this.getDisabledOptions(this.state.plainValues, value) })
     return this.props.onChange(value, option)
   }
 

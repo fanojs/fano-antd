@@ -17,10 +17,26 @@ export default class FanoFormCheckbox extends React.Component {
       dict,
       options,
       max,
-      disabledOptions: [],
+      multi: true,
       plainValues: options.map(o => o.value)
     }
+    this.state.disabledOptions = this.getDisabledOptions(this.state.plainValues, this.props.value)
     this.onChange = this.onChange.bind(this)
+  }
+
+  getDisabledOptions (plainValues, value) {
+    const { max, multi } = this.state
+    if (multi === true) {
+      let disabledOptions = []
+      if (_.isNumber(max) && value.length >= max) {
+        if (value.length > max) {
+          value = this.props.value
+        }
+        disabledOptions = _.difference(plainValues, value)
+      }
+      return disabledOptions
+    }
+    return this.state.disabledOptions || []
   }
 
   componentDidMount () {
@@ -47,10 +63,12 @@ export default class FanoFormCheckbox extends React.Component {
     get(url)
       .then(json => {
         if (Array.isArray(_.get(json, 'list'))) {
-          this.setState({
+          const state = {
             options: json.list,
             plainValues: json.list.map(o => o.value)
-          })
+          }
+          state.disabledOptions = this.getDisabledOptions(state.plainValues, this.props.value)
+          this.setState(state)
         } else {
           throw new Error(`Invalid 'url' format`)
         }
@@ -58,19 +76,9 @@ export default class FanoFormCheckbox extends React.Component {
       .catch(e => { throw e })
   }
 
-  onChange (checkedValues) {
-    const { max } = this.state
-    let disabledOptions = []
-    if (_.isNumber(max)) {
-      if (checkedValues.length === max) {
-        disabledOptions = _.difference(this.state.plainValues, checkedValues)
-      }
-      if (checkedValues.length > max) {
-        checkedValues = this.props.value
-      }
-    }
-    this.setState({ disabledOptions })
-    return this.props.onChange(checkedValues)
+  onChange (value) {
+    this.setState({ disabledOptions: this.getDisabledOptions(this.state.plainValues, value) })
+    return this.props.onChange(value)
   }
 
   render () {

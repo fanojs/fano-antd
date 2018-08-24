@@ -26,6 +26,7 @@
   "homepage": "https://github.com/fanojs/react-antd#readme",
   "dependencies": {
     "antd": "^3.8.1",
+    "array-to-tree": "^3.3.0",
     "isomorphic-fetch": "^2.2.1",
     "lodash": "^4.17.10",
     "moment": "^2.22.2",
