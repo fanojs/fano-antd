@@ -10,7 +10,6 @@ export default class FanoFormTimePicker extends React.Component {
       'allowClear',
       'format'
     ])
-    console.log(props)
     return (
       <TimePicker {...props} />
     )

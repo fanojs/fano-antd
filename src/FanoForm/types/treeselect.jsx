@@ -12,7 +12,7 @@ const TreeNode = TreeSelect.TreeNode
 export default class FanoFormTreeSelect extends React.Component {
   constructor (props) {
     super(props)
-    const { url, dict, max, remoteSearch, simpleMode } = props.injectProps.field.props
+    const { url, dict, max, simpleMode } = props.injectProps.field.props
     let { treeData = [] } = props.injectProps.field.props
     if (simpleMode) {
       this.transformKeysMap(treeData, simpleMode)
@@ -24,14 +24,12 @@ export default class FanoFormTreeSelect extends React.Component {
       treeData,
       simpleMode,
       max,
-      remoteSearch,
       plainValues: this.getPlainValues(treeData),
       transformed: this.transformProps()
     }
     this.state.disabledOptions = this.getDisabledOptions(this.state.plainValues, this.props.value)
     this.state.multi = !!this.state.transformed.multi
     this.onChange = this.onChange.bind(this)
-    this.onSearch = this.onSearch.bind(this)
   }
 
   getPlainValues (treeData) {
@@ -67,7 +65,7 @@ export default class FanoFormTreeSelect extends React.Component {
 
   transformProps () {
     const props = {}
-    const { max, allowInput, expandAll } = this.props.injectProps.field.props
+    const { max, allowInput, expandAll, ignoreCase = true } = this.props.injectProps.field.props
     if (_.isNumber(max)) {
       if (max > 1) {
         props.treeCheckable = true
@@ -80,6 +78,7 @@ export default class FanoFormTreeSelect extends React.Component {
       props.treeDefaultExpandAll = true
     }
     props.multi = !!props.treeCheckable
+    props.filterTreeNode = (inputValue, treeNode) => new RegExp(inputValue, ignoreCase === true ? 'mi' : 'm').test(treeNode.props.title)
     return props
   }
 
@@ -158,12 +157,6 @@ export default class FanoFormTreeSelect extends React.Component {
     return this.props.onChange(value)
   }
 
-  onSearch (value) {
-    this.fetchOptions(`${this.state.url}?${qs.stringify({
-      cond: JSON.stringify({ value }, null, 0)
-    })}`)
-  }
-
   renderTreeData (values) {
     const { disabledOptions } = this.state
     const array = []
@@ -182,7 +175,7 @@ export default class FanoFormTreeSelect extends React.Component {
   }
 
   render () {
-    const { treeData, transformed, remoteSearch, multi } = this.state
+    const { treeData, transformed, multi } = this.state
     const props = getProps(this.props, [
       'placeholder',
       'allowClear',
@@ -191,9 +184,6 @@ export default class FanoFormTreeSelect extends React.Component {
     Object.assign(props, transformed)
     if (multi === true) {
       props.onChange = this.onChange
-    }
-    if (remoteSearch === true) {
-      props.onSearch = this.onSearch
     }
     return (
       <TreeSelect {...props}>
