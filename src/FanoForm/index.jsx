@@ -17,6 +17,7 @@ import weekpicker from './types/weekpicker'
 import timepicker from './types/timepicker'
 import rangepicker from './types/rangepicker'
 import treeselect from './types/treeselect'
+import imgbox from './types/imgbox'
 
 import reftable from './types/custom/reftable'
 
@@ -38,7 +39,8 @@ FanoForm.c = {
     timepicker,
     rangepicker,
     treeselect,
-    reftable
+    reftable,
+    imgbox
   }
 }
 
