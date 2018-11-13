@@ -52,11 +52,11 @@ class DynamicForm extends React.Component {
     return label
   }
 
-  getColProps (colCount) {
-    if (!_.isNumber(colCount) || !_.isFinite(colCount)) {
-      colCount = 4
+  getColProps (columns) {
+    if (!_.isNumber(columns) || !_.isFinite(columns)) {
+      columns = 4
     }
-    switch (colCount) {
+    switch (columns) {
       case 4:
         return { xs: 24, sm: 12, md: 12, lg: 8, xl: 6 }
       case 3:
@@ -115,20 +115,35 @@ class DynamicForm extends React.Component {
   renderFields () {
     const { config, form } = this.props
     const { fieldsError } = this.state
-    const { fields, colCount = 4 } = config
-    const colProps = this.getColProps(colCount)
+    const { fields, columns = 4 } = config
+    const colProps = this.getColProps(columns)
     const { getFieldDecorator } = form
     const cols = []
     for (let i = 0; i < fields.length; i++) {
       const field = fields[i]
+      const style = {}
+      let fieldColProps = colProps
+      if (field.props.colProps) {
+        fieldColProps = field.props.colProps
+      } else if (_.isFinite(field.props.columns)) {
+        fieldColProps = this.getColProps(field.props.columns)
+      }
+      if (field.props.style) {
+        _.merge(style, field.props.style)
+      }
+      if (field.props.width) {
+        style.width = field.props.width
+      }
+      if (field.props.height) {
+        style.height = field.props.height
+      }
       field.props.placeholder = field.props.placeholder || field.label
 
       const fieldError = _.pick(fieldsError[field.name], ['requiredMark', 'validateStatus', 'hasFeedback', 'help'])
       const fieldLabel = this.getFieldLabel(field, fieldError.requiredMark)
       const fieldControl = this.getFieldControl(field)
       const formItemProps = {
-        className: `${styles.formItem} fano-form-item`,
-        label: <span className={`${styles.formItemLabel} fano-form-item-label`}>{fieldLabel}</span>,
+        label: <span className={`${styles.formItemLabel} fano-form-item-label fano-form-item-label-${field.name}`}>{fieldLabel}</span>,
         colon: false
       }
       const formItemOptions = {
@@ -140,9 +155,9 @@ class DynamicForm extends React.Component {
       }
       Object.assign(formItemProps, fieldError)
       cols.push(
-        <Col key={i} {...colProps}>
-          <FormItem {...formItemProps}>
-            <div className={`${styles.formItemCtrl} fano-form-item`}>
+        <Col key={i} {...fieldColProps} className={`fano-form-col fano-form-col-${field.name}`}>
+          <FormItem {...formItemProps} className={`${styles.formItem} fano-form-item fano-form-item-${field.name}`}>
+            <div className={`${styles.formItemCtrl} fano-form-ctrl fano-form-ctrl-${field.name}`} style={style}>
               {getFieldDecorator(field.name, formItemOptions)(fieldControl)}
             </div>
           </FormItem>
