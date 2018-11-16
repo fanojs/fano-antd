@@ -1,7 +1,7 @@
 import React from 'react'
 import _ from 'lodash'
 import qs from 'qs'
-import { Table, Button, Popconfirm, Divider, Icon, Popover, Checkbox } from 'antd'
+import { Table, Button, Popconfirm, Divider, Icon, Checkbox, Modal, Radio, Row, Col, Tooltip } from 'antd'
 import { Resizable } from 'react-resizable'
 import { get } from '../utils/request'
 import styles from './DynamicTable.less'
@@ -33,6 +33,8 @@ export default class DynamicTable extends React.Component {
     this.handleSetting = this.handleSetting.bind(this)
     this.handleSelect = this.handleSelect.bind(this)
     this.handleRowClick = this.handleRowClick.bind(this)
+    this.handleTableChange = this.handleTableChange.bind(this)
+    this.handleColumnsSetting = this.handleColumnsSetting.bind(this)
     const setting = _.merge({
       title: this.title,
       size: 'middle',
@@ -40,25 +42,17 @@ export default class DynamicTable extends React.Component {
       rowSelected: true,
       checkbox: true,
       pageMode: true,
-      columns: columns.map((col, index) => {
-        return Object.assign(col, {
-          onHeaderCell: column => {
-            return {
-              width: column.width,
-              onResize: this.handleResize(index)
-            }
-          }
-        })
-      }),
       loading: false
     }, props.config.setting, props.nativeSetting, props.expandSetting)
     this.state = {
       setting,
       data,
       columns,
+      columnsSetting: {},
       showActions,
       selectedRowKeys: [],
-      selectedRows: []
+      selectedRows: [],
+      settingModalVisible: false
     }
   }
 
@@ -293,16 +287,6 @@ export default class DynamicTable extends React.Component {
   }
 
   title () {
-    const settingPopover = (
-      <div>
-        <div><Checkbox checked={this.state.setting.bordered} onChange={e => (this.handleSetting('bordered', e.target.checked))}>显示边框</Checkbox></div>
-        <div><Checkbox checked={this.state.setting.showHeader} onChange={e => (this.handleSetting('showHeader', e.target.checked))}>显示列头</Checkbox></div>
-        <div><Checkbox checked={this.state.setting.checkbox} onChange={e => (this.handleSetting('checkbox', e.target.checked))}>显示选择框</Checkbox></div>
-        <div><Checkbox checked={this.state.setting.fixedHeader} onChange={e => (this.handleSetting('fixedHeader', e.target.checked))}>固定表头</Checkbox></div>
-        <div><Checkbox checked={this.state.setting.rowSelected} onChange={e => (this.handleSetting('rowSelected', e.target.checked))}>支持行选中</Checkbox></div>
-        <div><Checkbox checked={this.state.setting.pageMode} onChange={e => (this.handleSetting('pageMode', e.target.checked))}>支持分页</Checkbox></div>
-      </div>
-    )
     return (
       <div className={styles.toolbar}>
         <Button.Group size={'small'}>
@@ -320,9 +304,14 @@ export default class DynamicTable extends React.Component {
           <Button icon={'sync'} onClick={this.handleSync} />
         </Button.Group>
         <Button.Group size={'small'}>
-          <Popover content={settingPopover} trigger={'click'} placement={'bottomRight'}>
-            <Button icon={'setting'} onClick={this.handleSetting} />
-          </Popover>
+          <Button
+            icon={'setting'}
+            onClick={() => {
+              this.setState({
+                settingModalVisible: true
+              })
+            }}
+          />
         </Button.Group>
       </div>
     )
@@ -331,9 +320,41 @@ export default class DynamicTable extends React.Component {
     this.setState({ selectedRowKeys, selectedRows })
   }
 
+  handleColumnsSetting (column, key, value) {
+    const { columnsSetting } = this.state
+    _.set(columnsSetting, `${column.dataIndex}.${key}`, value)
+    this.setState({ columnsSetting })
+  }
+
+  handleTableChange (pagination, filters, sorter) {
+    const { data } = this.state
+    console.log(pagination, filters, sorter)
+    switch (sorter.order) {
+      case 'ascend':
+        data.sort = { [sorter.field]: 1 }
+        break
+      case 'descend':
+        data.sort = { [sorter.field]: -1 }
+        break
+      default:
+        data.sort = {}
+        break
+    }
+    this.setState({ data }, this.fetchList)
+  }
+
   render () {
-    const { data, selectedRowKeys } = this.state
+    const { data, selectedRowKeys, columns, settingModalVisible, columnsSetting } = this.state
     const setting = _.clone(this.state.setting)
+    setting.columns = columns.filter(column => {
+      const display = _.get(columnsSetting, `${column.dataIndex}.display`, true)
+      if (_.get(columnsSetting, `${column.dataIndex}.sorter`, false)) {
+        column.sorter = true
+      } else {
+        delete column.sorter
+      }
+      return display
+    })
     setting.dataSource = data.list
     if (setting.fixedHeader) {
       setting.scroll = { x: 1500, y: 500 }
@@ -373,12 +394,86 @@ export default class DynamicTable extends React.Component {
           cell: this.resizeableTitle
         }
       }
+      setting.columns = columns.map((col, index) => {
+        return Object.assign(col, {
+          onHeaderCell: column => {
+            return {
+              width: column.width,
+              onResize: this.handleResize(index)
+            }
+          }
+        })
+      })
     }
+    setting.onChange = this.handleTableChange
     return (
       <div className={styles.container}>
         <Table
           {...setting}
         />
+        <Modal
+          title={'Setting'}
+          visible={settingModalVisible}
+          onOk={() => {
+            this.setState({
+              settingModalVisible: false
+            })
+          }}
+          onCancel={() => {
+            this.setState({
+              settingModalVisible: false
+            })
+          }}
+          footer={null}
+        >
+          <Row>
+            <Col span={24}>
+              <section className={'fano-box'}>
+                <div className={'fano-box-title'}>常用设置</div>
+                <Row>
+                  <Col span={8}><Checkbox checked={setting.bordered} onChange={e => (this.handleSetting('bordered', e.target.checked))}>显示边框</Checkbox></Col>
+                  <Col span={8}><Checkbox checked={setting.showHeader} onChange={e => (this.handleSetting('showHeader', e.target.checked))}>显示列头</Checkbox></Col>
+                  <Col span={8}><Checkbox checked={setting.checkbox} onChange={e => (this.handleSetting('checkbox', e.target.checked))}>显示选择框</Checkbox></Col>
+                  <Col span={8}><Checkbox checked={setting.fixedHeader} onChange={e => (this.handleSetting('fixedHeader', e.target.checked))}>固定表头</Checkbox></Col>
+                  <Col span={8}><Checkbox checked={setting.rowSelected} onChange={e => (this.handleSetting('rowSelected', e.target.checked))}>支持行选中</Checkbox></Col>
+                  <Col span={8}><Checkbox checked={setting.pageMode} onChange={e => (this.handleSetting('pageMode', e.target.checked))}>支持分页</Checkbox></Col>
+                </Row>
+              </section>
+            </Col>
+            <Col span={24}>
+              <section className={'fano-box'}>
+                <div className={'fano-box-title'}>尺寸设置</div>
+                <Radio.Group
+                  onChange={e => (this.handleSetting('size', e.target.value))}
+                  value={setting.size}
+                >
+                  <Radio value={'default'}>Default</Radio>
+                  <Radio value={'middle'}>Middle</Radio>
+                  <Radio value={'small'}>Small</Radio>
+                </Radio.Group>
+              </section>
+            </Col>
+            <Col span={24}>
+              <section className={'fano-box'}>
+                <div className={'fano-box-title'}>字段设置</div>
+                <div className={styles.fieldsSetting}>
+                  {columns.map(column => {
+                    return (
+                      <div key={column.dataIndex} className={styles.fieldSetting}>
+                        <Tooltip title={column.title}>
+                          <span className={styles.fieldSettingLabel}>{column.title}：</span>
+                        </Tooltip>
+                        <Checkbox checked={_.get(columnsSetting, `${column.dataIndex}.display`, true)} onChange={e => (this.handleColumnsSetting(column, 'display', e.target.checked))}>是否显示</Checkbox>
+                        <Checkbox checked={_.get(columnsSetting, `${column.dataIndex}.filter`, false)} onChange={e => (this.handleColumnsSetting(column, 'filter', e.target.checked))}>快速筛选</Checkbox>
+                        <Checkbox checked={_.get(columnsSetting, `${column.dataIndex}.sorter`, false)} onChange={e => (this.handleColumnsSetting(column, 'sorter', e.target.checked))}>是否排序</Checkbox>
+                      </div>
+                    )
+                  })}
+                </div>
+              </section>
+            </Col>
+          </Row>
+        </Modal>
       </div>
     )
   }

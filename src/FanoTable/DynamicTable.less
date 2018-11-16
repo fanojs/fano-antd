@@ -27,4 +27,48 @@
   :global(.ant-table-header) {
     background: transparent;
   }
+  :global(.ant-table-selection-column) {
+    max-width: 62px;
+  }
+}
+
+.fieldsSetting {
+  max-height: 400px;
+  overflow-y: auto;
+  .fieldSetting {
+    display: flex;
+    align-items: center;
+    .fieldSettingLabel {
+      text-align: right;
+      display: inline-block;
+      width: 80px;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+      overflow: hidden;
+      margin-right: 8px;
+    }
+  }
+}
+
+:global(.fano-box) {
+  border: 1px solid #ebedf0;
+  position: relative;
+  padding: 18px 32px;
+  border-radius: 0 0 2px 2px;
+  transition: background-color .4s;
+  width: 100%;
+  font-size: 14px;
+  color: #314659;
+  line-height: 2;
+}
+
+:global(.fano-box-title) {
+  position: absolute;
+  top: -14px;
+  padding: 1px 8px;
+  margin-left: -8px;
+  color: #777;
+  border-radius: 2px 2px 0 0;
+  background: #fff;
+  transition: background-color .4s;
 }
