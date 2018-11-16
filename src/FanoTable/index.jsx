@@ -30,6 +30,25 @@ FanoTable.config = (options) => {
 FanoTable.fromJson = (json) => {
   return (
     class FanoComponent extends React.Component {
+      constructor (props) {
+        super(props)
+        this.combineExpandProps(json)
+      }
+
+      combineExpandProps (json) {
+        const { columnExpand } = this.props
+        if (!_.isPlainObject(columnExpand)) {
+          return
+        }
+
+        for (const column of json.columns) {
+          const expand = columnExpand[column.dataIndex]
+          if (_.isPlainObject(expand)) {
+            _.merge(column, expand)
+          }
+        }
+      }
+
       render () {
         return (
           <DynamicTable {...this.props}

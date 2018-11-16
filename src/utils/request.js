@@ -16,12 +16,15 @@ async function request (url, opts) {
   opts = _.merge({
     method: 'GET',
     headers: {
-      'Content-Type': 'application/json',
-      'token': window.localStorage.getItem(TOKEN_KEY)
+      'Content-Type': 'application/json'
     },
     cache: 'no-cache',
     credentials: 'include'
   }, opts)
+  const token = window.localStorage.getItem(TOKEN_KEY)
+  if (token && !opts.headers.token) {
+    opts.headers.token = token
+  }
   const onError = _.result(opts, 'onError', null)
   delete opts.onError
 
