@@ -9,6 +9,8 @@ import styles from './DynamicTable.less'
 export default class DynamicTable extends React.Component {
   constructor (props) {
     super(props)
+    const cacheKey = `FanoTable_${props.config.name}_setting`.toUpperCase()
+    const cachedSetting = this.loadFromLocalStorage(cacheKey)
     const data = {
       list: Array.isArray(this.props.values) ? this.props.values : []
     }
@@ -42,17 +44,34 @@ export default class DynamicTable extends React.Component {
       pageMode: true,
       loading: false
     }, props.config.setting, props.nativeSetting, props.expandSetting)
+    _.merge(setting, cachedSetting.setting)
     this.state = {
-      actionsSize: 'default',
+      cacheKey,
+      actionsSize: this.transformActionsSize(),
       setting,
       data,
       columns,
-      columnsSetting: {},
+      columnsSetting: cachedSetting.columnsSetting,
       showActions,
       selectedRowKeys: [],
       selectedRows: [],
       settingModalVisible: false
     }
+  }
+
+  loadFromLocalStorage (key) {
+    const setting = JSON.parse(window.localStorage.getItem(key) || '{}')
+    return {
+      setting: _.omit(setting, 'columnsSetting'),
+      columnsSetting: setting.columnsSetting || {}
+    }
+  }
+
+  saveToLocalStorage (key, setting) {
+    if (_.isPlainObject(setting)) {
+      setting = JSON.stringify(setting)
+    }
+    window.localStorage.setItem(key, setting)
   }
 
   componentWillMount () {
@@ -270,13 +289,19 @@ export default class DynamicTable extends React.Component {
     }
     const state = { setting }
     if (key === 'size') {
-      state.actionsSize = {
-        'default': 'large',
-        'middle': 'default',
-        'small': 'small'
-      }[value]
+      state.actionsSize = this.transformActionsSize(value)
     }
-    this.setState(state)
+    this.setState(state, () => {
+      this.saveToLocalStorage(this.state.cacheKey, Object.assign({ columnsSetting: this.state.columnsSetting }, this.state.setting))
+    })
+  }
+
+  transformActionsSize (settingSize) {
+    return {
+      'default': 'large',
+      'middle': 'default',
+      'small': 'small'
+    }[settingSize] || 'default'
   }
 
   handleRowClick (record, e) {
@@ -300,7 +325,9 @@ export default class DynamicTable extends React.Component {
   handleColumnsSetting (column, key, value) {
     const { columnsSetting } = this.state
     _.set(columnsSetting, `${column.dataIndex}.${key}`, value)
-    this.setState({ columnsSetting })
+    this.setState({ columnsSetting }, () => {
+      this.saveToLocalStorage(this.state.cacheKey, Object.assign({ columnsSetting: this.state.columnsSetting }, this.state.setting))
+    })
   }
 
   handleTableChange (pagination, filters, sorter) {
