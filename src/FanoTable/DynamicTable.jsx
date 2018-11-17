@@ -333,16 +333,47 @@ export default class DynamicTable extends React.Component {
   handleTableChange (pagination, filters, sorter) {
     const { data } = this.state
     console.log(pagination, filters, sorter)
-    switch (sorter.order) {
-      case 'ascend':
-        data.sort = { [sorter.field]: 1 }
-        break
-      case 'descend':
-        data.sort = { [sorter.field]: -1 }
-        break
-      default:
-        data.sort = {}
-        break
+    if (pagination) {
+      if (pagination.current) {
+        data.page = pagination.current
+      }
+      if (pagination.pageSize) {
+        data.size = pagination.pageSize
+      }
+    }
+    if (sorter) {
+      switch (sorter.order) {
+        case 'ascend':
+          data.sort = { [sorter.field]: 1 }
+          break
+        case 'descend':
+          data.sort = { [sorter.field]: -1 }
+          break
+        default:
+          data.sort = {}
+          break
+      }
+    }
+    if (filters) {
+      data.cond = data.cond || {}
+      for (const key in filters) {
+        const value = filters[key]
+        if (!value || (Array.isArray(value) && value.length === 0)) {
+          delete data.cond[key]
+          continue
+        }
+        if (Array.isArray(value)) {
+          if (value.length === 1) {
+            data.cond[key] = value[0]
+          } else {
+            data.cond[key] = {
+              $in: value
+            }
+          }
+        } else {
+          data.cond[key] = value
+        }
+      }
     }
     this.setState({ data }, this.fetchList)
   }
@@ -415,12 +446,6 @@ export default class DynamicTable extends React.Component {
       setting.pagination = {
         current: data.page || 1,
         pageSize: data.size,
-        onChange: (page, size) => {
-          const { data } = this.state
-          data.page = page
-          data.size = size
-          this.setState({ data }, this.fetchList)
-        },
         total: data.totalrecords
       }
     } else {
