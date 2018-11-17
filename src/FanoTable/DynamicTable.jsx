@@ -417,17 +417,36 @@ export default class DynamicTable extends React.Component {
         } else {
           column.filterIcon = <Icon type={'filter'} style={{ color: '#aaa' }} />
         }
-
-        column.filterDropdown = (
-          <div className={styles.customFilterDropdown}>
+        const tips = `请输入${column.title}关键字`
+        let inputPart
+        if (column.title.length > 4) {
+          inputPart = (
+            <Tooltip title={tips}>
+              <Input
+                placeholder={tips}
+                value={keyword}
+                size={actionsSize}
+                style={{ width: 170 }}
+                onChange={e => this.handleCond(column.dataIndex, e.target.value, true)}
+                onPressEnter={() => this.fetchList()}
+              />
+            </Tooltip>
+          )
+        } else {
+          inputPart = (
             <Input
-              placeholder={`请输入${column.title}关键字`}
+              placeholder={tips}
               value={keyword}
               size={actionsSize}
-              style={{ width: 180 }}
+              style={{ width: 170 }}
               onChange={e => this.handleCond(column.dataIndex, e.target.value, true)}
               onPressEnter={() => this.fetchList()}
             />
+          )
+        }
+        column.filterDropdown = (
+          <div className={styles.customFilterDropdown}>
+            {inputPart}
             <Button size={actionsSize} type={'primary'} onClick={() => this.fetchList()}>搜索</Button>
             <Button size={actionsSize} onClick={() => this.handleCond(column.dataIndex, null)}>清空</Button>
           </div>
