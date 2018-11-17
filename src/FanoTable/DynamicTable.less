@@ -12,11 +12,17 @@
     cursor: col-resize;
   }
   .toolbar {
-    display: flex;
-    align-items: center;
-    justify-content: flex-end;
-    >div {
-      margin-left: 4px;
+    .actions {
+      display: inline-block;
+      >button {
+        margin-right: 4px;
+      }
+    }
+    .rightArea {
+      float: right;
+      >button {
+        margin-left: 4px;
+      }
     }
   }
   .rowActions {

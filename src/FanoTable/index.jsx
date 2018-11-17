@@ -4,6 +4,12 @@ import _ from 'lodash'
 import { get } from '../utils/request'
 import DynamicTable from './DynamicTable'
 
+if (!_.isFunction(window.L)) {
+  window.L = (key, value) => {
+    return value || key
+  }
+}
+
 /**
  * 表格组件
  */

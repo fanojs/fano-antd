@@ -45,6 +45,7 @@ export default class DynamicTable extends React.Component {
       loading: false
     }, props.config.setting, props.nativeSetting, props.expandSetting)
     this.state = {
+      actionsSize: 'middle',
       setting,
       data,
       columns,
@@ -269,7 +270,15 @@ export default class DynamicTable extends React.Component {
     if (_.isFunction(this.props.onSetting)) {
       this.props.onSetting(setting)
     }
-    this.setState({ setting })
+    const state = { setting }
+    if (key === 'size') {
+      state.actionsSize = {
+        'default': 'large',
+        'middle': 'default',
+        'small': 'small'
+      }[value]
+    }
+    this.setState(state)
   }
 
   handleRowClick (record, e) {
@@ -287,10 +296,12 @@ export default class DynamicTable extends React.Component {
   }
 
   title () {
+    const size = this.state.actionsSize
     return (
       <div className={styles.toolbar}>
-        <Button.Group size={'small'}>
-          <Button icon={'plus'} type={'primary'} onClick={this.handleAdd} />
+        <div className={styles.actions}>
+          <Button size={size} icon={'plus'} type={'primary'} onClick={this.handleAdd}>新增</Button>
+          <Button size={size} icon={'sync'} onClick={this.handleSync}>刷新</Button>
           <Popconfirm
             title={'确认删除吗？'}
             onConfirm={() => {
@@ -299,20 +310,21 @@ export default class DynamicTable extends React.Component {
             okText={'确定'}
             cancelText={'取消'}
           >
-            <Button icon={'delete'} type={'danger'} />
+            <Button size={size} icon={'delete'} type={'danger'}>删除</Button>
           </Popconfirm>
-          <Button icon={'sync'} onClick={this.handleSync} />
-        </Button.Group>
-        <Button.Group size={'small'}>
+        </div>
+        <div className={styles.rightArea}>
           <Button
             icon={'setting'}
+            size={size}
             onClick={() => {
               this.setState({
                 settingModalVisible: true
               })
             }}
           />
-        </Button.Group>
+        </div>
+
       </div>
     )
   }
@@ -464,8 +476,8 @@ export default class DynamicTable extends React.Component {
                           <span className={styles.fieldSettingLabel}>{column.title}：</span>
                         </Tooltip>
                         <Checkbox checked={_.get(columnsSetting, `${column.dataIndex}.display`, true)} onChange={e => (this.handleColumnsSetting(column, 'display', e.target.checked))}>是否显示</Checkbox>
-                        {/* <Checkbox checked={_.get(columnsSetting, `${column.dataIndex}.filter`, false)} onChange={e => (this.handleColumnsSetting(column, 'filter', e.target.checked))}>快速筛选</Checkbox> */}
                         <Checkbox checked={_.get(columnsSetting, `${column.dataIndex}.sorter`, false)} onChange={e => (this.handleColumnsSetting(column, 'sorter', e.target.checked))}>是否排序</Checkbox>
+                        <Checkbox checked={_.get(columnsSetting, `${column.dataIndex}.filter`, false)} onChange={e => (this.handleColumnsSetting(column, 'filter', e.target.checked))}>快速筛选</Checkbox>
                       </div>
                     )
                   })}
