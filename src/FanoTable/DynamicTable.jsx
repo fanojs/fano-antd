@@ -1,7 +1,7 @@
 import React, { Fragment } from 'react'
 import _ from 'lodash'
 import qs from 'qs'
-import { Table, Button, Popconfirm, Divider, Icon, Checkbox, Modal, Radio, Row, Col, Tooltip, Alert } from 'antd'
+import { Table, Button, Popconfirm, Divider, Icon, Checkbox, Modal, Radio, Row, Col, Tooltip, Alert, Input } from 'antd'
 import { Resizable } from 'react-resizable'
 import { get } from '../utils/request'
 import styles from './DynamicTable.less'
@@ -320,6 +320,24 @@ export default class DynamicTable extends React.Component {
     this.setState({ data }, this.fetchList)
   }
 
+  handleCond (key, value, likeMode) {
+    const { data } = this.state
+    data.cond = data.cond || {}
+    if (value) {
+      if (likeMode) {
+        data.cond[key] = {
+          $regex: value,
+          $options: 'mi'
+        }
+      } else {
+        data.cond[key] = value
+      }
+    } else {
+      delete data.cond[key]
+    }
+    this.setState({ data })
+  }
+
   render () {
     const { data, selectedRowKeys, columns, settingModalVisible, columnsSetting, actionsSize } = this.state
     const setting = _.clone(this.state.setting)
@@ -329,6 +347,36 @@ export default class DynamicTable extends React.Component {
         column.sorter = true
       } else {
         delete column.sorter
+      }
+      if (_.get(columnsSetting, `${column.dataIndex}.filter`, false)) {
+        let keyword = _.get(data.cond, column.dataIndex)
+        if (_.isPlainObject(keyword) && keyword.$regex) {
+          keyword = keyword.$regex
+        }
+
+        if (keyword) {
+          column.filterIcon = <Icon type={'filter'} theme={'filled'} style={{ color: '#108ee9' }} />
+        } else {
+          column.filterIcon = <Icon type={'filter'} style={{ color: '#aaa' }} />
+        }
+
+        column.filterDropdown = (
+          <div className={styles.customFilterDropdown}>
+            <Input
+              placeholder={`请输入${column.title}关键字`}
+              value={keyword}
+              size={actionsSize}
+              style={{ width: 180 }}
+              onChange={e => this.handleCond(column.dataIndex, e.target.value, true)}
+              onPressEnter={() => this.fetchList()}
+            />
+            <Button size={actionsSize} type={'primary'} onClick={() => this.fetchList()}>搜索</Button>
+            <Button size={actionsSize} onClick={() => this.handleCond(column.dataIndex, null)}>清空</Button>
+          </div>
+        )
+      } else {
+        delete column.filterDropdown
+        delete column.filterIcon
       }
       return display
     })
