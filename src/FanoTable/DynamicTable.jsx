@@ -1,7 +1,7 @@
-import React from 'react'
+import React, { Fragment } from 'react'
 import _ from 'lodash'
 import qs from 'qs'
-import { Table, Button, Popconfirm, Divider, Icon, Checkbox, Modal, Radio, Row, Col, Tooltip } from 'antd'
+import { Table, Button, Popconfirm, Divider, Icon, Checkbox, Modal, Radio, Row, Col, Tooltip, Alert } from 'antd'
 import { Resizable } from 'react-resizable'
 import { get } from '../utils/request'
 import styles from './DynamicTable.less'
@@ -25,7 +25,6 @@ export default class DynamicTable extends React.Component {
         })
       }
     }
-    this.title = this.title.bind(this)
     this.handleDel = this.handleDel.bind(this)
     this.handleAdd = this.handleAdd.bind(this)
     this.handleEdit = this.handleEdit.bind(this)
@@ -36,7 +35,6 @@ export default class DynamicTable extends React.Component {
     this.handleTableChange = this.handleTableChange.bind(this)
     this.handleColumnsSetting = this.handleColumnsSetting.bind(this)
     const setting = _.merge({
-      title: this.title,
       size: 'middle',
       fixedHeader: true,
       rowSelected: true,
@@ -45,7 +43,7 @@ export default class DynamicTable extends React.Component {
       loading: false
     }, props.config.setting, props.nativeSetting, props.expandSetting)
     this.state = {
-      actionsSize: 'middle',
+      actionsSize: 'default',
       setting,
       data,
       columns,
@@ -295,39 +293,6 @@ export default class DynamicTable extends React.Component {
     this.setState({ selectedRowKeys, selectedRows })
   }
 
-  title () {
-    const size = this.state.actionsSize
-    return (
-      <div className={styles.toolbar}>
-        <div className={styles.actions}>
-          <Button size={size} icon={'plus'} type={'primary'} onClick={this.handleAdd}>新增</Button>
-          <Button size={size} icon={'sync'} onClick={this.handleSync}>刷新</Button>
-          <Popconfirm
-            title={'确认删除吗？'}
-            onConfirm={() => {
-              this.handleDel(null)
-            }}
-            okText={'确定'}
-            cancelText={'取消'}
-          >
-            <Button size={size} icon={'delete'} type={'danger'}>删除</Button>
-          </Popconfirm>
-        </div>
-        <div className={styles.rightArea}>
-          <Button
-            icon={'setting'}
-            size={size}
-            onClick={() => {
-              this.setState({
-                settingModalVisible: true
-              })
-            }}
-          />
-        </div>
-
-      </div>
-    )
-  }
   handleSelect (selectedRowKeys, selectedRows) {
     this.setState({ selectedRowKeys, selectedRows })
   }
@@ -356,7 +321,7 @@ export default class DynamicTable extends React.Component {
   }
 
   render () {
-    const { data, selectedRowKeys, columns, settingModalVisible, columnsSetting } = this.state
+    const { data, selectedRowKeys, columns, settingModalVisible, columnsSetting, actionsSize } = this.state
     const setting = _.clone(this.state.setting)
     setting.columns = columns.filter(column => {
       const display = _.get(columnsSetting, `${column.dataIndex}.display`, true)
@@ -420,6 +385,44 @@ export default class DynamicTable extends React.Component {
     setting.onChange = this.handleTableChange
     return (
       <div className={styles.container}>
+        <div className={styles.toolbar} style={{ marginBottom: 16 }}>
+          <div className={styles.actions}>
+            <Button size={actionsSize} icon={'plus'} type={'primary'} onClick={this.handleAdd}>新增</Button>
+            <Button size={actionsSize} icon={'sync'} onClick={this.handleSync}>刷新</Button>
+            <Popconfirm
+              title={'确认删除吗？'}
+              onConfirm={() => {
+                this.handleDel(null)
+              }}
+              okText={'确定'}
+              cancelText={'取消'}
+            >
+              <Button size={actionsSize} icon={'delete'} type={'danger'}>删除</Button>
+            </Popconfirm>
+          </div>
+          <div className={styles.rightArea}>
+            <Button
+              icon={'setting'}
+              size={actionsSize}
+              onClick={() => {
+                this.setState({
+                  settingModalVisible: true
+                })
+              }}
+            />
+          </div>
+        </div>
+        <Alert
+          message={
+            <Fragment>
+              <span>已选择 <a style={{ fontWeight: 600 }}>{selectedRowKeys.length}</a> 行</span>
+              <a style={{ marginLeft: 24 }} onClick={() => (this.setState({ selectedRowKeys: [], selectedRows: [] }))}>清空</a>
+            </Fragment>
+          }
+          type={'info'}
+          showIcon
+          style={{ marginBottom: 16 }}
+        />
         <Table
           {...setting}
         />
