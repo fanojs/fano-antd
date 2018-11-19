@@ -12,10 +12,10 @@ export default class DynamicTable extends React.Component {
     const cacheKey = `FanoTable_${props.config.name}_setting`.toUpperCase()
     const cachedSetting = this.loadFromLocalStorage(cacheKey)
     const data = {
-      list: Array.isArray(this.props.values) ? this.props.values : []
+      list: Array.isArray(props.values) ? props.values : []
     }
     const showActions = _.get(this, 'props.config.showActions', 'del,sync,new,delRow,editRow').split(',')
-    const columns = this.wrapColumnsDefaultProps(this.props.config.columns, showActions)
+    const columns = this.wrapColumnsDefaultProps(props.config.columns, showActions, props.config.width)
     this.handleResize = (index) => {
       return (e, { size }) => {
         this.setState(({ columns }) => {
@@ -78,20 +78,39 @@ export default class DynamicTable extends React.Component {
     this.fetchList()
   }
 
-  wrapColumnsDefaultProps (rawColumns, showActions) {
+  wrapColumnsDefaultProps (rawColumns, showActions, width) {
     const columns = []
     for (const column of rawColumns) {
       if (column.width === undefined) {
-        column.width = 100
+        column.width = width || 150
       }
       if (column.width === '-' || !column.width) {
         delete column.width
       }
       const render = column.render
+      const tip = column.tip
       if (_.isFunction(render)) {
-        column.render = (text, record) => <span>{render(text, record)}</span>
+        column.render = (text, record) => {
+          text = render(text, record)
+          if (tip) {
+            let title = _.isString(text) ? text : tip
+            if (_.isString(title)) {
+              text = <Tooltip title={title}>{text}</Tooltip>
+            }
+          }
+          return text
+        }
       } else {
-        column.render = (text) => <span>{text}</span>
+        column.render = (text) => {
+          text = <span>{text}</span>
+          if (tip) {
+            let title = _.isString(text) ? text : tip
+            if (_.isString(title)) {
+              text = <Tooltip title={title}>{text}</Tooltip>
+            }
+          }
+          return text
+        }
       }
       columns.push(column)
     }
@@ -132,6 +151,7 @@ export default class DynamicTable extends React.Component {
       const actionsColumn = {
         title: '操作',
         dataIndex: 'actions',
+        fixed: 'right',
         width: 80,
         render: (text, record) => {
           const ret = []
@@ -459,7 +479,7 @@ export default class DynamicTable extends React.Component {
     })
     setting.dataSource = data.list
     if (setting.fixedHeader) {
-      setting.scroll = { x: 1500, y: 500 }
+      setting.scroll = { x: '130%', y: 500 }
     }
     if (setting.pageMode) {
       setting.pagination = {
@@ -472,6 +492,7 @@ export default class DynamicTable extends React.Component {
     }
     if (setting.checkbox) {
       setting.rowSelection = {
+        fixed: true,
         selectedRowKeys,
         onChange: this.handleSelect
       }
@@ -571,6 +592,7 @@ export default class DynamicTable extends React.Component {
                   <Col span={8}><Checkbox checked={setting.fixedHeader} onChange={e => (this.handleSetting('fixedHeader', e.target.checked))}>固定表头</Checkbox></Col>
                   <Col span={8}><Checkbox checked={setting.rowSelected} onChange={e => (this.handleSetting('rowSelected', e.target.checked))}>支持行选中</Checkbox></Col>
                   <Col span={8}><Checkbox checked={setting.pageMode} onChange={e => (this.handleSetting('pageMode', e.target.checked))}>支持分页</Checkbox></Col>
+                  <Col span={8}><Checkbox checked={setting.resizeableHeader} onChange={e => (this.handleSetting('resizeableHeader', e.target.checked))}>伸缩列</Checkbox></Col>
                 </Row>
               </section>
             </Col>

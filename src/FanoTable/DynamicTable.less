@@ -52,6 +52,26 @@
       margin-right: 0px;
     }
   }
+  :global(.ant-table) {
+    table {
+      table-layout: fixed;
+      .cell {
+        white-space: nowrap;
+        text-overflow: ellipsis;
+        overflow: hidden;
+        word-break: keep-all;
+      }
+      th {
+        .cell
+      }
+      td {
+        .cell
+      }
+    }
+  }
+  :global(.ant-table-fixed-columns-in-body) {
+    opacity: 0;
+  }
 }
 
 .fieldsSetting {
