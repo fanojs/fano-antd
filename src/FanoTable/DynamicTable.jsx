@@ -15,7 +15,6 @@ export default class DynamicTable extends React.Component {
       list: Array.isArray(props.values) ? props.values : []
     }
     const showActions = _.get(this, 'props.config.showActions', 'del,sync,new,delRow,editRow').split(',')
-    const columns = this.wrapColumnsDefaultProps(props.config.columns, showActions, props.config.width)
     this.handleResize = (index) => {
       return (e, { size }) => {
         this.setState(({ columns }) => {
@@ -44,7 +43,12 @@ export default class DynamicTable extends React.Component {
       pageMode: true,
       loading: false
     }, props.config.setting, props.nativeSetting, props.expandSetting)
-    _.merge(setting, cachedSetting.setting)
+    if (!setting.version || (setting.version && setting.version === cachedSetting.version)) {
+      _.merge(setting, cachedSetting.setting)
+    } else {
+      this.clearLocalStorage(cacheKey)
+    }
+    const columns = this.wrapColumnsDefaultProps(props.config.columns, showActions, setting)
     this.state = {
       cacheKey,
       actionsSize: this.transformActionsSize(),
@@ -74,40 +78,52 @@ export default class DynamicTable extends React.Component {
     window.localStorage.setItem(key, setting)
   }
 
+  clearLocalStorage (key) {
+    window.localStorage.removeItem(key)
+  }
+
   componentWillMount () {
     this.fetchList()
   }
 
-  wrapColumnsDefaultProps (rawColumns, showActions, width) {
+  getRowNoColumn () {
+    return this.rowNoColumn || {
+      title: 'No.',
+      dataIndex: 'rowNo',
+      width: 60
+    }
+  }
+
+  wrapColumnsDefaultProps (rawColumns, showActions, setting) {
     const columns = []
+    if (setting.rowNo && !rawColumns.find(item => item.dataIndex === 'rowNo')) {
+      rawColumns.unshift(this.getRowNoColumn())
+    }
     for (const column of rawColumns) {
       if (column.width === undefined) {
-        column.width = width || 150
+        column.width = setting.width || 150
       }
       if (column.width === '-' || !column.width) {
         delete column.width
       }
       const render = column.render
-      const tip = column.tip
       if (_.isFunction(render)) {
         column.render = (text, record) => {
           text = render(text, record)
-          if (tip) {
-            let title = _.isString(text) ? text : tip
-            if (_.isString(title)) {
-              text = <Tooltip title={title}>{text}</Tooltip>
-            }
+          if (column.tip) {
+            text = <Tooltip title={text}>{text}</Tooltip>
           }
           return text
         }
       } else {
         column.render = (text) => {
-          text = <span>{text}</span>
-          if (tip) {
-            let title = _.isString(text) ? text : tip
-            if (_.isString(title)) {
-              text = <Tooltip title={title}>{text}</Tooltip>
-            }
+          if (column.img) {
+            text = <img src={text} alt={text} height={30} />
+          } else {
+            text = <span>{text}</span>
+          }
+          if (column.tip) {
+            text = <Tooltip title={text}>{text}</Tooltip>
           }
           return text
         }
@@ -168,9 +184,10 @@ export default class DynamicTable extends React.Component {
           return ret
         }
       }
-      Object.assign(actionsColumn, _.find(columns, item => item.dataIndex === 'actions') || {})
+      Object.assign(actionsColumn, _.find(columns, item => item.dataIndex === 'actions'))
       columns.push(actionsColumn)
     }
+    this.rowNoColumn = _.find(columns, item => item.dataIndex === 'rowNo')
     return columns
   }
 
@@ -256,6 +273,10 @@ export default class DynamicTable extends React.Component {
     setting = this.state.setting
     setting.loading = false
     if (Array.isArray(_.get(json, 'list'))) {
+      for (let i = 0; i < json.list.length; i++) {
+        const item = json.list[i]
+        item.rowNo = (json.page - 1) * json.size + i + 1
+      }
       this.setState({
         data: json,
         setting
@@ -302,7 +323,7 @@ export default class DynamicTable extends React.Component {
   }
 
   handleSetting (key, value) {
-    const { setting } = this.state
+    let { setting, columns } = this.state
     setting[key] = value
     if (_.isFunction(this.props.onSetting)) {
       this.props.onSetting(setting)
@@ -310,6 +331,13 @@ export default class DynamicTable extends React.Component {
     const state = { setting }
     if (key === 'size') {
       state.actionsSize = this.transformActionsSize(value)
+    } else if (key === 'rowNo') {
+      if (value) {
+        columns.unshift(this.getRowNoColumn())
+      } else {
+        columns = columns.filter(item => item.dataIndex !== 'rowNo')
+      }
+      state.columns = columns
     }
     this.setState(state, () => {
       this.saveToLocalStorage(this.state.cacheKey, Object.assign({ columnsSetting: this.state.columnsSetting }, this.state.setting))
@@ -402,7 +430,7 @@ export default class DynamicTable extends React.Component {
     const { data } = this.state
     data.cond = data.cond || {}
     if (value) {
-      if (likeMode) {
+      if (likeMode && _.isString(value)) {
         data.cond[key] = {
           $regex: value,
           $options: 'mi'
@@ -479,7 +507,7 @@ export default class DynamicTable extends React.Component {
     })
     setting.dataSource = data.list
     if (setting.fixedHeader) {
-      setting.scroll = { x: '130%', y: 500 }
+      setting.scroll = { x: '120%', y: 500 }
     }
     if (setting.pageMode) {
       setting.pagination = {
@@ -593,6 +621,7 @@ export default class DynamicTable extends React.Component {
                   <Col span={8}><Checkbox checked={setting.rowSelected} onChange={e => (this.handleSetting('rowSelected', e.target.checked))}>支持行选中</Checkbox></Col>
                   <Col span={8}><Checkbox checked={setting.pageMode} onChange={e => (this.handleSetting('pageMode', e.target.checked))}>支持分页</Checkbox></Col>
                   <Col span={8}><Checkbox checked={setting.resizeableHeader} onChange={e => (this.handleSetting('resizeableHeader', e.target.checked))}>伸缩列</Checkbox></Col>
+                  <Col span={8}><Checkbox checked={setting.rowNo} onChange={e => (this.handleSetting('rowNo', e.target.checked))}>显示行号</Checkbox></Col>
                 </Row>
               </section>
             </Col>
