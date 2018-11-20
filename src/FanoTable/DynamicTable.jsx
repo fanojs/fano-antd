@@ -1,9 +1,9 @@
 import React, { Fragment } from 'react'
 import _ from 'lodash'
 import qs from 'qs'
-import { Table, Button, Popconfirm, Divider, Icon, Checkbox, Modal, Radio, Row, Col, Tooltip, Alert, Input } from 'antd'
+import { Table, Button, Popconfirm, Divider, Icon, Checkbox, Modal, Radio, Row, Col, Tooltip, Alert, Input, message } from 'antd'
 import { Resizable } from 'react-resizable'
-import { get } from '../utils/request'
+import { get, del } from '../utils/request'
 import { If } from '../components/Directives'
 import styles from './DynamicTable.less'
 
@@ -306,21 +306,40 @@ export default class DynamicTable extends React.Component {
     }
   }
 
-  handleDel (record) {
+  async handleDel (record) {
     const { rowKey } = this.state.setting
     let { selectedRowKeys, selectedRows } = this.state
     if (record) {
       selectedRowKeys = [record[rowKey]]
       selectedRows = [record]
     }
+    if (selectedRowKeys.length === 0) {
+      message.warning('请先选择需要删除的数据')
+    }
+    let success = false
     if (_.isFunction(this.props.onDel)) {
       this.props.onDel(selectedRowKeys, selectedRows)
+      success = true
+    } else {
+      const { deleteUrl } = this.props.config
+      if (deleteUrl) {
+        const ret = await del(deleteUrl, {
+          cond: {
+            [rowKey]: selectedRowKeys
+          }
+        })
+        if (ret) {
+          message.success(`已成功删除 ${selectedRowKeys.length} 条记录`, 5)
+          success = true
+        }
+      }
     }
-    this.setState({
-      selectedRowKeys: [],
-      selectedRows: []
-    })
-    console.log(selectedRowKeys, selectedRows)
+    if (success) {
+      this.setState({
+        selectedRowKeys: [],
+        selectedRows: []
+      }, this.fetchList)
+    }
   }
 
   handleSetting (key, value) {
@@ -443,6 +462,10 @@ export default class DynamicTable extends React.Component {
       delete data.cond[key]
     }
     this.setState({ data })
+  }
+
+  componentWillUnmount () {
+    this.setState = () => {}
   }
 
   render () {
@@ -581,59 +604,61 @@ export default class DynamicTable extends React.Component {
             />
           </div>
         </div>
-        <Alert
-          message={
-            <Fragment>
-              <span>
-                <Fragment>已选择</Fragment>
-                <a
-                  style={{ fontWeight: 600, margin: '0 5px' }}
-                  onClick={() => {
-                    if (this.state.selectedRowKeys.length === 0) {
-                      return
-                    }
-                    const { rowKey } = this.state.setting
-                    const { data } = this.state
-                    const state = {}
-                    if (!this.state.preData) {
-                      state.preData = _.cloneDeep(data)
-                    }
-                    data.cond = {
-                      [rowKey]: {
-                        $in: selectedRowKeys
+        <If cond={!setting.hideOnNoSelected || (setting.hideOnNoSelected === true && selectedRowKeys.length > 0)}>
+          <Alert
+            message={
+              <Fragment>
+                <span>
+                  <Fragment>已选择</Fragment>
+                  <a
+                    style={{ fontWeight: 600, margin: '0 5px' }}
+                    onClick={() => {
+                      if (this.state.selectedRowKeys.length === 0) {
+                        return
                       }
-                    }
-                    data.page = 1
-                    state.data = data
-                    this.setState(state, this.fetchList)
-                  }}
-                >
-                  {selectedRowKeys.length}
-                </a>
-                <React.Fragment>行</React.Fragment>
-              </span>
-              <a style={{ marginLeft: 24 }} onClick={() => (this.setState({ selectedRowKeys: [], selectedRows: [] }))}>清空</a>
-              <If cond={preData}>
-                <a
-                  style={{ marginLeft: 8 }}
-                  onClick={() => {
-                    if (this.state.preData) {
-                      this.setState({
-                        data: this.state.preData,
-                        preData: null
-                      })
-                    }
-                  }}
-                >
-                  撤销
-                </a>
-              </If>
-            </Fragment>
-          }
-          type={'info'}
-          showIcon
-          style={{ marginBottom: 16 }}
-        />
+                      const { rowKey } = this.state.setting
+                      const { data } = this.state
+                      const state = {}
+                      if (!this.state.preData) {
+                        state.preData = _.cloneDeep(data)
+                      }
+                      data.cond = {
+                        [rowKey]: {
+                          $in: selectedRowKeys
+                        }
+                      }
+                      data.page = 1
+                      state.data = data
+                      this.setState(state, this.fetchList)
+                    }}
+                  >
+                    {selectedRowKeys.length}
+                  </a>
+                  <React.Fragment>行</React.Fragment>
+                </span>
+                <a style={{ marginLeft: 24 }} onClick={() => (this.setState({ selectedRowKeys: [], selectedRows: [] }))}>清空</a>
+                <If cond={preData}>
+                  <a
+                    style={{ marginLeft: 8 }}
+                    onClick={() => {
+                      if (this.state.preData) {
+                        this.setState({
+                          data: this.state.preData,
+                          preData: null
+                        })
+                      }
+                    }}
+                  >
+                    撤销
+                  </a>
+                </If>
+              </Fragment>
+            }
+            type={'info'}
+            showIcon
+            style={{ marginBottom: 16 }}
+          />
+        </If>
         <Table
           {...setting}
         />
@@ -665,6 +690,7 @@ export default class DynamicTable extends React.Component {
                   <Col span={8}><Checkbox checked={setting.pageMode} onChange={e => (this.handleSetting('pageMode', e.target.checked))}>支持分页</Checkbox></Col>
                   <Col span={8}><Checkbox checked={setting.resizeableHeader} onChange={e => (this.handleSetting('resizeableHeader', e.target.checked))}>伸缩列</Checkbox></Col>
                   <Col span={8}><Checkbox checked={setting.rowNo} onChange={e => (this.handleSetting('rowNo', e.target.checked))}>显示行号</Checkbox></Col>
+                  <Col span={12}><Checkbox checked={setting.hideOnNoSelected} onChange={e => (this.handleSetting('hideOnNoSelected', e.target.checked))}>未选择时隐藏提示</Checkbox></Col>
                 </Row>
               </section>
             </Col>
