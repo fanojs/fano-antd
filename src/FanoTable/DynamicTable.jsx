@@ -104,9 +104,6 @@ export default class DynamicTable extends React.Component {
       if (column.width === undefined) {
         column.width = setting.width || 150
       }
-      if (column.width === '-' || !column.width) {
-        delete column.width
-      }
       const render = column.render
       if (_.isFunction(render)) {
         column.render = (text, record) => {
@@ -194,12 +191,16 @@ export default class DynamicTable extends React.Component {
       }
     }
     columns = columns.filter(column => {
-      if (column.width === '-') {
-        delete column.width
-      }
       if (column.dataIndex === 'actions') {
+        console.log(column)
         _.merge(actionsColumn, column)
+        if (actionsColumn.width === '-' || !actionsColumn.width) {
+          delete actionsColumn.width
+        }
         return false
+      }
+      if (column.width === '-' || !column.width) {
+        delete column.width
       }
       return true
     })
