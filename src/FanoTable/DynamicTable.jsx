@@ -194,8 +194,10 @@ export default class DynamicTable extends React.Component {
       }
     }
     columns = columns.filter(column => {
+      if (column.width === '-') {
+        delete column.width
+      }
       if (column.dataIndex === 'actions') {
-        console.log(column)
         _.merge(actionsColumn, column)
         return false
       }
