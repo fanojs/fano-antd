@@ -52,6 +52,14 @@ FanoTable.fromJson = (json) => {
           if (_.isPlainObject(expand)) {
             _.merge(column, expand)
           }
+          delete columnExpand[column.dataIndex]
+        }
+        if (Object.keys(columnExpand).length > 0) {
+          for (const dataIndex in columnExpand) {
+            const value = columnExpand[dataIndex]
+            value.dataIndex = dataIndex
+            json.columns.push(_.cloneDeep(value))
+          }
         }
       }
 

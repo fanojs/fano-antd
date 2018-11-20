@@ -96,7 +96,7 @@ export default class DynamicTable extends React.Component {
   }
 
   wrapColumnsDefaultProps (rawColumns, showActions, setting) {
-    const columns = []
+    let columns = []
     if (setting.rowNo && !rawColumns.find(item => item.dataIndex === 'rowNo')) {
       rawColumns.unshift(this.getRowNoColumn())
     }
@@ -116,7 +116,7 @@ export default class DynamicTable extends React.Component {
           }
           return text
         }
-      } else {
+      } else if (!['actions'].includes(column.dataIndex)) {
         column.render = (text) => {
           if (column.img) {
             text = <img src={text} alt={text} height={30} />
@@ -131,9 +131,9 @@ export default class DynamicTable extends React.Component {
       }
       columns.push(column)
     }
-    const actions = []
+    const presetActions = []
     if (showActions.includes('editRow')) {
-      actions.push((text, record) => {
+      presetActions.push((text, record) => {
         return (
           <Icon
             key={'edit'}
@@ -147,7 +147,7 @@ export default class DynamicTable extends React.Component {
       })
     }
     if (showActions.includes('delRow')) {
-      actions.push((text, record) => {
+      presetActions.push((text, record) => {
         return (
           <Popconfirm
             title={'确认删除吗？'}
@@ -163,31 +163,45 @@ export default class DynamicTable extends React.Component {
         )
       })
     }
-
-    if (actions.length > 0) {
-      const actionsColumn = {
-        title: '操作',
-        dataIndex: 'actions',
-        fixed: 'right',
-        width: 80,
-        render: (text, record) => {
-          const ret = []
-          for (let i = 0; i < actions.length; i++) {
-            let action = actions[i]
-            if (_.isFunction(action)) {
-              action = action(text, record)
-            }
-            ret.push(action)
-            if (i < actions.length - 1) {
-              ret.push(<Divider type={'vertical'} key={i} />)
+    // 添加操作列
+    const actionsColumn = {
+      title: '操作',
+      dataIndex: 'actions',
+      fixed: 'right',
+      width: 80,
+      render: (text, record) => {
+        const actions = _.cloneDeep(presetActions)
+        const { actionsSize } = this.state
+        if (Array.isArray(this.props.rowActions)) {
+          for (const item of this.props.rowActions) {
+            if (_.isFunction(item)) {
+              actions.push(item(record, actionsSize))
             }
           }
-          return ret
         }
+        const ret = []
+        for (let i = 0; i < actions.length; i++) {
+          let action = actions[i]
+          if (_.isFunction(action)) {
+            action = action(text, record)
+          }
+          ret.push(action)
+          if (i < actions.length - 1) {
+            ret.push(<Divider type={'vertical'} key={i} />)
+          }
+        }
+        return ret
       }
-      Object.assign(actionsColumn, _.find(columns, item => item.dataIndex === 'actions'))
-      columns.push(actionsColumn)
     }
+    columns = columns.filter(column => {
+      if (column.dataIndex === 'actions') {
+        console.log(column)
+        _.merge(actionsColumn, column)
+        return false
+      }
+      return true
+    })
+    columns.push(actionsColumn)
     this.rowNoColumn = _.find(columns, item => item.dataIndex === 'rowNo')
     return columns
   }
@@ -469,6 +483,7 @@ export default class DynamicTable extends React.Component {
 
   render () {
     const { data, selectedRowKeys, columns, settingModalVisible, columnsSetting, actionsSize, preData } = this.state
+    const { tableActions } = this.props
     const setting = _.clone(this.state.setting)
     setting.columns = columns.filter(column => {
       const display = _.get(columnsSetting, `${column.dataIndex}.display`, true)
@@ -530,7 +545,7 @@ export default class DynamicTable extends React.Component {
     })
     setting.dataSource = data.list
     if (setting.fixedHeader) {
-      setting.scroll = { x: '120%', y: 500 }
+      setting.scroll = { x: '110%', y: 500 }
     }
     if (setting.pageMode) {
       setting.pagination = {
@@ -574,6 +589,10 @@ export default class DynamicTable extends React.Component {
       })
     }
     setting.onChange = this.handleTableChange
+    let customTableActions = []
+    if (Array.isArray(tableActions)) {
+      customTableActions = tableActions.map(item => item(actionsSize))
+    }
     return (
       <div className={styles.container}>
         <div className={styles.toolbar} style={{ marginBottom: 16 }}>
@@ -590,6 +609,7 @@ export default class DynamicTable extends React.Component {
               <Button size={actionsSize} icon={'delete'} type={'danger'}>删除</Button>
             </Popconfirm>
             <Button size={actionsSize} icon={'sync'} onClick={this.handleSync}>刷新</Button>
+            {customTableActions}
           </div>
           <div className={styles.rightArea}>
             <Button
