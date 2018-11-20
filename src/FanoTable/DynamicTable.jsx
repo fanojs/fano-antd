@@ -11,7 +11,7 @@ export default class DynamicTable extends React.Component {
   constructor (props) {
     super(props)
     const cacheKey = `FanoTable_${props.config.name}_setting`.toUpperCase()
-    const cachedSetting = this.loadFromLocalStorage(cacheKey)
+    const cachedSetting = this.loadSettingFromLocal(cacheKey)
     const data = {
       list: Array.isArray(props.values) ? props.values : []
     }
@@ -47,7 +47,7 @@ export default class DynamicTable extends React.Component {
     if (!setting.version || (setting.version && setting.version === _.get(cachedSetting, 'setting.version'))) {
       _.merge(setting, cachedSetting.setting)
     } else {
-      this.clearLocalStorage(cacheKey)
+      this.clearLocalSetting(cacheKey)
     }
     const columns = this.wrapColumnsDefaultProps(props.config.columns, showActions, setting)
     this.state = {
@@ -64,7 +64,7 @@ export default class DynamicTable extends React.Component {
     }
   }
 
-  loadFromLocalStorage (key) {
+  loadSettingFromLocal (key) {
     const setting = JSON.parse(window.localStorage.getItem(key) || '{}')
     return {
       setting: _.omit(setting, 'columnsSetting'),
@@ -72,14 +72,14 @@ export default class DynamicTable extends React.Component {
     }
   }
 
-  saveToLocalStorage (key, setting) {
+  saveSettingToLocal (key, setting) {
     if (_.isPlainObject(setting)) {
       setting = JSON.stringify(setting)
     }
     window.localStorage.setItem(key, setting)
   }
 
-  clearLocalStorage (key) {
+  clearLocalSetting (key) {
     window.localStorage.removeItem(key)
   }
 
@@ -341,7 +341,7 @@ export default class DynamicTable extends React.Component {
       state.columns = columns
     }
     this.setState(state, () => {
-      this.saveToLocalStorage(this.state.cacheKey, Object.assign({ columnsSetting: this.state.columnsSetting }, this.state.setting))
+      this.saveSettingToLocal(this.state.cacheKey, Object.assign({ columnsSetting: this.state.columnsSetting }, this.state.setting))
     })
   }
 
@@ -375,7 +375,7 @@ export default class DynamicTable extends React.Component {
     const { columnsSetting } = this.state
     _.set(columnsSetting, `${column.dataIndex}.${key}`, value)
     this.setState({ columnsSetting }, () => {
-      this.saveToLocalStorage(this.state.cacheKey, Object.assign({ columnsSetting: this.state.columnsSetting }, this.state.setting))
+      this.saveSettingToLocal(this.state.cacheKey, Object.assign({ columnsSetting: this.state.columnsSetting }, this.state.setting))
     })
   }
 
