@@ -400,7 +400,6 @@ export default class DynamicTable extends React.Component {
 
   handleTableChange (pagination, filters, sorter) {
     const { data } = this.state
-    console.log(pagination, filters, sorter)
     if (pagination) {
       if (pagination.current) {
         data.page = pagination.current
@@ -580,7 +579,6 @@ export default class DynamicTable extends React.Component {
         <div className={styles.toolbar} style={{ marginBottom: 16 }}>
           <div className={styles.actions}>
             <Button size={actionsSize} icon={'plus'} type={'primary'} onClick={this.handleAdd}>新增</Button>
-            <Button size={actionsSize} icon={'sync'} onClick={this.handleSync}>刷新</Button>
             <Popconfirm
               title={'确认删除吗？'}
               onConfirm={() => {
@@ -591,6 +589,7 @@ export default class DynamicTable extends React.Component {
             >
               <Button size={actionsSize} icon={'delete'} type={'danger'}>删除</Button>
             </Popconfirm>
+            <Button size={actionsSize} icon={'sync'} onClick={this.handleSync}>刷新</Button>
           </div>
           <div className={styles.rightArea}>
             <Button
