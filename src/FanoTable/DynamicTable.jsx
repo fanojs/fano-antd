@@ -446,7 +446,7 @@ export default class DynamicTable extends React.Component {
     this.setState({ data }, this.fetchList)
   }
 
-  handleCond (key, value, likeMode) {
+  handleCond (key, value, likeMode, callback) {
     const { data } = this.state
     data.cond = data.cond || {}
     if (value) {
@@ -461,7 +461,7 @@ export default class DynamicTable extends React.Component {
     } else {
       delete data.cond[key]
     }
-    this.setState({ data })
+    this.setState({ data }, callback)
   }
 
   componentWillUnmount () {
@@ -520,7 +520,7 @@ export default class DynamicTable extends React.Component {
           <div className={styles.customFilterDropdown}>
             {inputPart}
             <Button size={actionsSize} type={'primary'} onClick={() => this.fetchList()}>搜索</Button>
-            <Button size={actionsSize} onClick={() => this.handleCond(column.dataIndex, null)}>清空</Button>
+            <Button size={actionsSize} onClick={() => this.handleCond(column.dataIndex, null, false, this.fetchList)}>清空</Button>
           </div>
         )
       } else {
