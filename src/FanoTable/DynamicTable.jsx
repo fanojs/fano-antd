@@ -4,6 +4,7 @@ import qs from 'qs'
 import { Table, Button, Popconfirm, Divider, Icon, Checkbox, Modal, Radio, Row, Col, Tooltip, Alert, Input } from 'antd'
 import { Resizable } from 'react-resizable'
 import { get } from '../utils/request'
+import { If } from '../components/Directives'
 import styles from './DynamicTable.less'
 
 export default class DynamicTable extends React.Component {
@@ -43,7 +44,7 @@ export default class DynamicTable extends React.Component {
       pageMode: true,
       loading: false
     }, props.config.setting, props.nativeSetting, props.expandSetting)
-    if (!setting.version || (setting.version && setting.version === cachedSetting.version)) {
+    if (!setting.version || (setting.version && setting.version === _.get(cachedSetting, 'setting.version'))) {
       _.merge(setting, cachedSetting.setting)
     } else {
       this.clearLocalStorage(cacheKey)
@@ -445,7 +446,7 @@ export default class DynamicTable extends React.Component {
   }
 
   render () {
-    const { data, selectedRowKeys, columns, settingModalVisible, columnsSetting, actionsSize } = this.state
+    const { data, selectedRowKeys, columns, settingModalVisible, columnsSetting, actionsSize, preData } = this.state
     const setting = _.clone(this.state.setting)
     setting.columns = columns.filter(column => {
       const display = _.get(columnsSetting, `${column.dataIndex}.display`, true)
@@ -583,8 +584,50 @@ export default class DynamicTable extends React.Component {
         <Alert
           message={
             <Fragment>
-              <span>已选择 <a style={{ fontWeight: 600 }}>{selectedRowKeys.length}</a> 行</span>
+              <span>
+                <Fragment>已选择</Fragment>
+                <a
+                  style={{ fontWeight: 600, margin: '0 5px' }}
+                  onClick={() => {
+                    if (this.state.selectedRowKeys.length === 0) {
+                      return
+                    }
+                    const { rowKey } = this.state.setting
+                    const { data } = this.state
+                    const state = {}
+                    if (!this.state.preData) {
+                      state.preData = _.cloneDeep(data)
+                    }
+                    data.cond = {
+                      [rowKey]: {
+                        $in: selectedRowKeys
+                      }
+                    }
+                    data.page = 1
+                    state.data = data
+                    this.setState(state, this.fetchList)
+                  }}
+                >
+                  {selectedRowKeys.length}
+                </a>
+                <React.Fragment>行</React.Fragment>
+              </span>
               <a style={{ marginLeft: 24 }} onClick={() => (this.setState({ selectedRowKeys: [], selectedRows: [] }))}>清空</a>
+              <If cond={preData}>
+                <a
+                  style={{ marginLeft: 8 }}
+                  onClick={() => {
+                    if (this.state.preData) {
+                      this.setState({
+                        data: this.state.preData,
+                        preData: null
+                      })
+                    }
+                  }}
+                >
+                  撤销
+                </a>
+              </If>
             </Fragment>
           }
           type={'info'}
