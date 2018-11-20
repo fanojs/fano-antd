@@ -634,23 +634,17 @@ export default class DynamicTable extends React.Component {
                   <a
                     style={{ fontWeight: 600, margin: '0 5px' }}
                     onClick={() => {
-                      if (this.state.selectedRowKeys.length === 0) {
+                      if (this.state.selectedRowKeys.length === 0 || this.state.preData) {
                         return
                       }
-                      const { rowKey } = this.state.setting
-                      const { data } = this.state
-                      const state = {}
-                      if (!this.state.preData) {
-                        state.preData = _.cloneDeep(data)
-                      }
-                      data.cond = {
-                        [rowKey]: {
-                          $in: selectedRowKeys
-                        }
-                      }
-                      data.page = 1
-                      state.data = data
-                      this.setState(state, this.fetchList)
+                      this.setState({
+                        preData: _.cloneDeep(this.state.data),
+                        data: Object.assign(_.cloneDeep(this.state.data), {
+                          page: 1,
+                          list: this.state.selectedRows,
+                          totalrecords: this.state.selectedRowKeys.length
+                        })
+                      })
                     }}
                   >
                     {selectedRowKeys.length}
