@@ -655,7 +655,9 @@ export default class DynamicTable extends React.Component {
                   </a>
                   <React.Fragment>行</React.Fragment>
                 </span>
-                <a style={{ marginLeft: 24 }} onClick={() => (this.setState({ selectedRowKeys: [], selectedRows: [] }))}>清空</a>
+                <If cond={selectedRowKeys.length > 0}>
+                  <a style={{ marginLeft: 24 }} onClick={() => (this.setState({ selectedRowKeys: [], selectedRows: [] }))}>清空</a>
+                </If>
                 <If cond={preData}>
                   <a
                     style={{ marginLeft: 8 }}
