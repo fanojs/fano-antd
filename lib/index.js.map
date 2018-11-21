@@ -1,0 +1,1 @@
+{"version":3,"sources":["../src/index.js"],"names":["FanoForm","FanoTable"],"mappings":";;;;;;;;;;;;;;;;;;;;;;;;;;;;;;UAIEA,Q,GAAAA,kB;UACAC,S,GAAAA,mB","file":"index.js","sourcesContent":["import FanoForm from './FanoForm'\nimport FanoTable from './FanoTable'\n\nexport {\n  FanoForm,\n  FanoTable\n}\n"]}
