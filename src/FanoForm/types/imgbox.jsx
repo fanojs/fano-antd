@@ -1,7 +1,6 @@
 import React from 'react'
 import { Upload, Icon, Modal } from 'antd'
 import { getProps } from '../../utils/form'
-import styles from './imgbox.less'
 
 export default class FanoFormImgBox extends React.Component {
   constructor (props) {
@@ -69,7 +68,7 @@ export default class FanoFormImgBox extends React.Component {
       uploadButton = null
     }
     return (
-      <div className={`${styles.container}`}>
+      <div style={{ lineHeight: '100%', padding: '4px 0' }}>
         <Upload
           {...props}
           listType={'picture-card'}

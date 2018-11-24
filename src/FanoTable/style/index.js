@@ -1,0 +1,1 @@
+import '../DynamicTable.less'
