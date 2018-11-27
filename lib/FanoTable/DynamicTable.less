@@ -1,4 +1,4 @@
-.container {
+.fano-table-container {
   font-size: 14px;
   :global(.react-resizable) {
     position: relative;
@@ -11,14 +11,14 @@
     right: -5px;
     cursor: col-resize;
   }
-  .toolbar {
-    .actions {
+  .fano-table-toolbar {
+    .fano-table-actions {
       display: inline-block;
       >button {
         margin-right: 8px;
       }
     }
-    .rightArea {
+    .fano-table-right-area {
       float: right;
       >button {
         margin-left: 8px;
@@ -36,7 +36,7 @@
   :global(.ant-table-selection-column) {
     max-width: 62px;
   }
-  .customFilterDropdown {
+  .fano-table-custom-filter-dropdown {
     padding: 8px;
     border-radius: 6px;
     background: #fff;
@@ -74,13 +74,13 @@
   }
 }
 
-.fieldsSetting {
+.fano-table-fields-setting {
   max-height: 400px;
   overflow-y: auto;
-  .fieldSetting {
+  .fano-table-field-setting {
     display: flex;
     align-items: center;
-    .fieldSettingLabel {
+    .fano-table-field-setting-label {
       text-align: right;
       display: inline-block;
       width: 80px;

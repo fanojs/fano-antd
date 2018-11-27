@@ -5,7 +5,6 @@ import { Table, Button, Popconfirm, Divider, Icon, Checkbox, Modal, Radio, Row, 
 import { Resizable } from 'react-resizable'
 import { get, del } from '../utils/request'
 import { If } from '../components/Directives'
-import styles from './DynamicTable.less'
 
 export default class DynamicTable extends React.Component {
   constructor (props) {
@@ -533,7 +532,7 @@ export default class DynamicTable extends React.Component {
           )
         }
         column.filterDropdown = (
-          <div className={styles.customFilterDropdown}>
+          <div className={'fano-table-custom-filter-dropdown'}>
             {inputPart}
             <Button size={actionsSize} type={'primary'} onClick={() => this.fetchList()}>搜索</Button>
             <Button size={actionsSize} onClick={() => this.handleCond(column.dataIndex, null, false, this.fetchList)}>清空</Button>
@@ -596,9 +595,9 @@ export default class DynamicTable extends React.Component {
       customTableActions = tableActions.map(item => item(actionsSize))
     }
     return (
-      <div className={styles.container}>
-        <div className={styles.toolbar} style={{ marginBottom: 16 }}>
-          <div className={styles.actions}>
+      <div className={'fano-table-container'}>
+        <div className={'fano-table-toolbar'} style={{ marginBottom: 16 }}>
+          <div className={'fano-table-actions'}>
             <Button size={actionsSize} icon={'plus'} type={'primary'} onClick={this.handleAdd}>新增</Button>
             <Popconfirm
               title={'确认删除吗？'}
@@ -613,7 +612,7 @@ export default class DynamicTable extends React.Component {
             <Button size={actionsSize} icon={'sync'} onClick={this.handleSync}>刷新</Button>
             {customTableActions}
           </div>
-          <div className={styles.rightArea}>
+          <div className={'fano-table-right-area'}>
             <Button
               icon={'setting'}
               size={actionsSize}
@@ -727,12 +726,12 @@ export default class DynamicTable extends React.Component {
             <Col span={24}>
               <section className={'fano-box'}>
                 <div className={'fano-box-title'}>字段设置</div>
-                <div className={styles.fieldsSetting}>
+                <div className={'fano-table-fields-setting'}>
                   {columns.map(column => {
                     return (
-                      <div key={column.dataIndex} className={styles.fieldSetting}>
+                      <div key={column.dataIndex} className={'fano-table-field-setting'}>
                         <Tooltip title={column.title}>
-                          <span className={styles.fieldSettingLabel}>{column.title}：</span>
+                          <span className={'fano-table-field-setting-label'}>{column.title}：</span>
                         </Tooltip>
                         <Checkbox checked={_.get(columnsSetting, `${column.dataIndex}.display`, true)} onChange={e => (this.handleColumnsSetting(column, 'display', e.target.checked))}>是否显示</Checkbox>
                         <Checkbox checked={_.get(columnsSetting, `${column.dataIndex}.sorter`, false)} onChange={e => (this.handleColumnsSetting(column, 'sorter', e.target.checked))}>是否排序</Checkbox>

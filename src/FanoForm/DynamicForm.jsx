@@ -1,7 +1,6 @@
 import React from 'react'
 import _ from 'lodash'
 import { Form, Row, Col, Button } from 'antd'
-import styles from './DynamicForm.less'
 
 const FormItem = Form.Item
 
@@ -35,9 +34,9 @@ class DynamicForm extends React.Component {
   }
 
   getFieldLabel (field, needMark) {
-    const text = <span key={'label'} className={`${styles.formItemText} fano-form-item-label-text`}>{field.label}</span>
-    const mark = <span key={'requiredMark'} className={`${styles.requiredMark} fano-form-item-required-mark`}>*</span>
-    const colonGetter = (mark = ':') => <span key={'colon'} className={`${styles.formItemColon} fano-form-item-colon`}>{mark}</span>
+    const text = <span key={'label'} className={`fano-form-item-text fano-form-item-label-text`}>{field.label}</span>
+    const mark = <span key={'requiredMark'} className={`fano-form-item-required-mark`}>*</span>
+    const colonGetter = (mark = ':') => <span key={'colon'} className={`fano-form-item-colon fano-form-item-colon`}>{mark}</span>
 
     const label = [text]
     if (field.props.required ||
@@ -143,7 +142,7 @@ class DynamicForm extends React.Component {
       const fieldLabel = this.getFieldLabel(field, fieldError.requiredMark)
       const fieldControl = this.getFieldControl(field)
       const formItemProps = {
-        label: <span className={`${styles.formItemLabel} fano-form-item-label fano-form-item-label-${field.name}`}>{fieldLabel}</span>,
+        label: <span className={`fano-form-item-label fano-form-item-label fano-form-item-label-${field.name}`}>{fieldLabel}</span>,
         colon: false
       }
       const formItemOptions = {
@@ -156,8 +155,8 @@ class DynamicForm extends React.Component {
       Object.assign(formItemProps, fieldError)
       cols.push(
         <Col key={i} {...fieldColProps} className={`fano-form-col fano-form-col-${field.name}`}>
-          <FormItem {...formItemProps} className={`${styles.formItem} fano-form-item fano-form-item-${field.name}`}>
-            <div className={`${styles.formItemCtrl} fano-form-ctrl fano-form-ctrl-${field.name}`} style={style}>
+          <FormItem {...formItemProps} className={`fano-form-item fano-form-item-${field.name}`}>
+            <div className={`fano-form-item-ctrl fano-form-ctrl fano-form-ctrl-${field.name}`} style={style}>
               {getFieldDecorator(field.name, formItemOptions)(fieldControl)}
             </div>
           </FormItem>
@@ -177,7 +176,7 @@ class DynamicForm extends React.Component {
 
   getDefaultFooter () {
     return (
-      <div className={styles.footer}>
+      <div className={'fano-form-footer'}>
         <Button>取消</Button>
         <Button type={'primary'} onClick={this.handleSubmit}>确定</Button>
       </div>
