@@ -36,6 +36,7 @@ export default class DynamicTable extends React.Component {
     this.handleTableChange = this.handleTableChange.bind(this)
     this.handleColumnsSetting = this.handleColumnsSetting.bind(this)
     const setting = _.merge({
+      rowKey: '_id',
       size: 'middle',
       fixedHeader: true,
       rowSelected: true,
